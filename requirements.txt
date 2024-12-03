@@ -1,0 +1,13 @@
+# main framework
+fastapi
+uvicorn[standard]
+pydantic_settings
+python-dotenv
+# utils
+bcrypt
+python-multipart
+python-dotenv
+pyjwt
+# DB
+sqlmodel
+mariadb # driver do db
