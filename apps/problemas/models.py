@@ -8,7 +8,7 @@ from sqlmodel import select
 from database.schemas.problemas import Problema, Evento, Tag
 from database.schemas.users import User
 
-class Pessoas():
+class Problemas():
 
     def create(*
         self,
