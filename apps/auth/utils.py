@@ -4,6 +4,7 @@ from config import settings
 
 from fastapi import Depends, HTTPException, status
 from database.connection import get_session, DBSessionDep
+
 # JWT utils
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -15,7 +16,8 @@ import bcrypt
 from sqlmodel import select, Session
 
 # Schemas
-from database.schemas.auth import User, TokenData
+from database.schemas.auth import TokenData
+from database.schemas.users import User
 
 # Dependencies
 from .dependencies import oauth2_scheme
@@ -122,3 +124,5 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Usuário inativo")
     
     return current_user
+
+DBCurrentUserDep = Annotated[User, Depends(get_current_active_user)]

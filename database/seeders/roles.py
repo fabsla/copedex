@@ -1,4 +1,4 @@
-from database.schemas.auth import Role
+from database.schemas.users import Role
 from database.connection import Session, engine
 from sqlalchemy.exc import IntegrityError
 

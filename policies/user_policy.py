@@ -1,12 +1,12 @@
-from database.schemas.auth import User, RoleName
+from database.schemas.users import User, RoleEnum
 
-def before(current_user: User, policy_name: str):
-	if current_user.has_role(RoleName.admin):
+def before(current_user: User, ability: str):
+	if current_user.has_role(RoleEnum.admin):
 		return True
 	return None
 
 def store(current_user: User):
-	return current_user.has_role(RoleName.admin)
+	return current_user.has_role(RoleEnum.admin)
 
 def update(current_user: User, object_user: User | None = None):
 	if object_user is not None:
@@ -14,6 +14,16 @@ def update(current_user: User, object_user: User | None = None):
 	return False
 
 def delete(current_user: User, object_user: User | None = None):
+	if object_user is not None:
+		return current_user.id == object_user.id
+	return False
+
+def force_delete(current_user: User, object_user: User | None = None):
+	if object_user is not None:
+		return current_user.id == object_user.id
+	return False
+
+def restore(current_user: User, object_user: User | None = None):
 	if object_user is not None:
 		return current_user.id == object_user.id
 	return False

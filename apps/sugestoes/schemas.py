@@ -4,7 +4,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from apps.sugestoes.types import Status_Sugestao
 
 if TYPE_CHECKING:
-    from database.schemas.auth import User
+    from database.schemas.users import User
     from database.schemas.problemas import Problema
 
 class Sugestoes_User(SQLModel, table=True):

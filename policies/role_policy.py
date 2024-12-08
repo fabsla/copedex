@@ -1,8 +1,8 @@
-from database.schemas.auth import User, RoleName
+from database.schemas.users import User, RoleEnum
 from database.schemas.problemas import Problema
 
-def before(current_user: User, policy_name: str):
-	if current_user.has_role(RoleName.admin):
+def before(current_user: User, ability: str):
+	if current_user.has_role(RoleEnum.admin):
 		return True
 	return None
 

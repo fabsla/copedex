@@ -2,12 +2,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from database.connection import DBSessionDep
+from apps.auth.utils import DBCurrentUserDep
 
-from database.schemas.auth import User
+from database.schemas.users import User
 from database.schemas.problemas import Evento, Problema, Pessoa, Role, Tag
 from apps.problemas.models import Users
 
-problemas_router = APIRouter(
+router = APIRouter(
     prefix = '/problemas',
     tags = ['problemas'],
     responses = { 404: {'description': 'Não encontrado'}}
@@ -16,7 +17,7 @@ problemas_router = APIRouter(
 '''
 Problemas
 '''
-@app.get("/problemas")
+@router.get("/problemas")
 async def list_problemas(
     page: int | None = None,
     limit: int = 100,

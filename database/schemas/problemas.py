@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, SQLModel, Relationship
 
 if TYPE_CHECKING:
-    from database.schemas.auth import User, Pessoa, Role
+    from database.schemas.users import User, Pessoa, Role
     from apps.sugestoes.schemas import Sugestoes
 
 class Problema_Tag(SQLModel, table=True):

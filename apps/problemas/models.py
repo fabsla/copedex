@@ -5,21 +5,24 @@ from fastapi import HTTPException, status
 from database.connection import DBSessionDep
 from sqlmodel import select
 
-from database.schemas.problemas import Pessoa, Role, Token, TokenData
+from database.schemas.problemas import Problema, Evento, Tag
+from database.schemas.users import User
 
 class Pessoas():
 
-    def create(
+    def create(*
         self,
-        titulo: str
-        enunciado=enunciado,
-        limite_tempo=limite_tempo,
-        limite_memoria_mb=limite_memoria_mb,
-        categoria=categoria,
-        dificuldade=dificuldade,
-        autor=autor,
-        evento=evento,
-        , db: DBSessionDep):
+        titulo: str,
+        enunciado: str,
+        limite_tempo: int | None = None,
+        limite_memoria_mb: int | None = None,
+        categoria: str | None = None,
+        dificuldade: str | None = None,
+        autor: str | None = None,
+        evento_id: int | None = None,
+        uploaders: list[User] | None = None,
+        db: DBSessionDep,
+    ) -> Problema:
         
         problema = Problema(
             titulo=titulo,
@@ -29,7 +32,7 @@ class Pessoas():
             categoria=categoria,
             dificuldade=dificuldade,
             autor=autor,
-            evento=evento,
+            evento_id=evento_id,
         )
         try:
             db.add(problema)

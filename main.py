@@ -19,29 +19,34 @@ from config import settings
 from apps.auth.dependencies import oauth2_scheme
 
 # Models
-from apps.auth.models import Users
 
 # Schemas
 from apps.sugestoes.types import Status_Sugestao
 from apps.sugestoes.schemas import Sugestoes, Sugestoes_User, Problema_Sugestoes
 
-from database.schemas.auth import Pessoa, Role, User, Token, TokenData
+from database.schemas.auth import Token, TokenData
+from database.schemas.users import Pessoa, Role, User
 from database.schemas.problemas import Evento, Problema, Tag, Problema_User, Problema_Tag
 
+# Routers
 from apps.auth.routes import router as auth_router
+from apps.users.routes import router as user_router
 
 # Utils
 
 # import policies
 
+# Lifespan: linhas antes do 'yield' serão executadas on startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     RoleSeeder.seed_db()
     yield
 
+# init
 app = FastAPI(lifespan = lifespan)
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins     = settings.cors.ALLOWED_ORIGINS, # lista de origens permitidas
@@ -50,7 +55,9 @@ app.add_middleware(
     allow_headers     = ['*'], # lista de headers HTTP permitidos
 )
 
+# Routers
 app.include_router(auth_router)
+app.include_router(user_router)
 
 @app.get("/")
 async def root():
