@@ -49,7 +49,7 @@ app = FastAPI(lifespan = lifespan)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = settings.cors.ALLOWED_ORIGINS, # lista de origens permitidas
+    allow_origins     = settings.cors.ALLOWED_ORIGINS.split(','), # lista de origens permitidas
     allow_credentials = True, # permite cookies
     allow_methods     = ['*'], # lista de metodos HTTP permitidos 
     allow_headers     = ['*'], # lista de headers HTTP permitidos

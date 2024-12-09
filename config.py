@@ -1,10 +1,11 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 import dotenv
 import os
 
 dotenv.load_dotenv('./.env')
-
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
 class DatabaseSettings(BaseSettings):
     CONNECTOR: str   = os.getenv('DATABASE_CONNECTOR')
     HOST: str        = os.getenv('DATABASE_HOST')
@@ -19,13 +20,10 @@ class AuthenticationSettings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 30)
 
 class CORSSettings(BaseSettings):
-    allowed_origins_raw = os.getenv(
-        'ALLOWED_ORIGINS', 'http://localhost,https://localhost'
-    )
-    ALLOWED_ORIGINS: list[str] = allowed_origins_raw.split(',')
-
+    ALLOWED_ORIGINS: str = os.getenv('ALLOWED_ORIGINS', 'http://localhost,https://localhost')
+    
 class Settings(BaseSettings):
-    DEBUG: bool = os.getenv('DEBUG', True)
+    DEBUG: bool = bool(os.getenv('DEBUG', True))
     APP_NAME: str = os.getenv('APP_NAME', 'CoPR - Contest Problem Radar')
     
     auth: AuthenticationSettings = AuthenticationSettings()
