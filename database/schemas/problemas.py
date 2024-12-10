@@ -17,31 +17,32 @@ class Problema_User(SQLModel, table=True):
 
 class TagBase(SQLModel):
     id: int | None = Field(default = None, primary_key = True)
-    nome: str      = Field(default = None, max_length = 255, min_length = 3)
     
 class Tag(TagBase, table=True):
+    nome: str = Field(default = None, max_length = 255, min_length = 3)
     problemas: list["Problema"] = Relationship(back_populates="tags", link_model=Problema_Tag)
 
 
 class EventoBase(SQLModel):
     id: int | None = Field(default = None, primary_key = True)
-    titulo: str    = Field(default = None, max_length = 255, min_length = 3)
 
 class Evento(EventoBase, table=True):
+    titulo: str = Field(default = None, max_length = 255, min_length = 3)
     problemas: list["Problema"] = Relationship(back_populates = "evento")
 
 
 class ProblemaBase(SQLModel):
     id: int | None                = Field(default=None, primary_key=True)
-    titulo: str                   = Field(default=None, max_length=255, min_length=3)
-    enunciado: str                = Field(max_length=255, min_length=3)
+    autor: str | None             = None
+    dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)
     limite_tempo: int | None      = None
     limite_memoria_mb: int | None = None
-    categoria: str                = Field(max_length=255, min_length=3)
-    dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)
-    autor: int | None             = None
 
 class Problema(ProblemaBase, table=True):
+    titulo: str    = Field(default=None, max_length=255, min_length=3)
+    enunciado: str = Field(max_length=255, min_length=3)
+    categoria: str = Field(max_length=255, min_length=3)
+
     uploaders: list['User'] | None    = Relationship(back_populates = "problemas", link_model = Problema_User)
 
     evento_id: int | None         = Field(default=None, foreign_key="evento.id")

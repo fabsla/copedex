@@ -65,6 +65,11 @@ def get_by_id(*,
         
     return model_instance
 
+def search(*,
+    model_read: SQLModel,
+    
+):
+
 class ModelGetter:
     def __init__(self, model: Callable):
         self.model = model

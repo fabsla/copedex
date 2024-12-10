@@ -1,12 +1,18 @@
+# Base
 from typing import Annotated
 from fastapi import APIRouter, Depends
 
+# Database
 from database.connection import DBSessionDep
-from apps.auth.utils import DBCurrentUserDep
 
+# Dependencies
+from apps.auth.utils import DBCurrentUserDep
+from apps.problemas.dependencies import ProblemaDep
+
+# Schemas
 from database.schemas.users import User
 from database.schemas.problemas import Evento, Problema, Pessoa, Role, Tag
-from apps.problemas.models import Users
+from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaCreate, TagRead
 
 router = APIRouter(
     prefix = '/problemas',
@@ -18,46 +24,17 @@ router = APIRouter(
 Problemas
 '''
 @router.get("/problemas")
-async def list_problemas(
-    page: int | None = None,
+async def list_problemas(*,
+    problema: ProblemaRead,
+    evento: EventoRead,
+    tags: TagRead,
+    skip: int | None = None,
     limit: int = 100,
-    titulo: str | None = None,
-    enunciado:str | None = None,
-    limite_tempo_inf: int | None = None,
-    limite_tempo_sup: int | None = None,
-    limite_memoria_inf: int | None = None,
-    limite_memoria_sup: int | None = None,
-    categoria: str | None = None,
-    dificuldade: str | None = None,
-    autor = None,
-    evento = None,
-    db = DBSessionDep
-    ):
+    db: DBSessionDep
+):
     with Session(db_engine) as session:
         query = select(Problema)
-        if titulo:
-            query = query.where(Problema.titulo == '%'+titulo+'%')
-        if enunciado:
-            query = query.where(Problema.enunciado == '%'+enunciado+'%')
-        if limite_tempo_inf:
-            query = query.where(Problema.limite_tempo >= limite_tempo_inf)
-        if limite_tempo_sup:
-            query = query.where(Problema.limite_tempo <= limite_tempo_sup)
-        if limite_memoria_inf:
-            query = query.where(Problema.limite_memoria >= limite_memoria_inf)
-        if limite_memoria_sup:
-            query = query.where(Problema.limite_memoria <= limite_memoria_sup)
-        if categoria:
-            query = query.where(Problema.categoria == categoria)
-        if dificuldade:
-            query = query.where(Problema.dificuldade == dificuldade)
-        if autor:
-            query = query.where(Problema.autor == autor)
-        if evento:
-            query = query.where(Problema.evento == evento)
-
-        query = query.limit(limit).offset(int(page)*100)
-        results = session.exec(select(Problema)).all()
+        
         # results = session.exec(query).all()
 
     return results
