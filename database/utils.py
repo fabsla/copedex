@@ -49,7 +49,7 @@ def get_index(*,
     model_data = db.exec(query)
 
     return model_data
-
+    
 def get_by_id(*,
     model: Callable,
     id: int,
@@ -60,7 +60,7 @@ def get_by_id(*,
     if model_instance is None:
         raise HTTPException(
                 status_code = status.HTTP_404_NOT_FOUND,
-                detail = f"{model} não encontrado!"
+                detail = f"{model.__format__()} não encontrado!"
             )
         
     return model_instance

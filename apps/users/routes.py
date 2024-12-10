@@ -63,7 +63,7 @@ async def read_user_me(
 ) -> UserBase:
     return current_user
 
-@router.get("/{user_id}", dependencies=[Depends(Authorizer('user', 'read_any'))])
+@router.get("/{id}", dependencies=[Depends(Authorizer('user', 'read_any'))])
 async def read_user(
     user: UserDep,
     current_user: DBCurrentUserDep,
@@ -87,7 +87,7 @@ async def list_users(*,
 
     return Users.index(offset = skip, limit = limit, db = db)
 
-@router.delete("/{user_id}", dependencies=[Depends(Authorizer('user', 'delete'))])
+@router.delete("/{id}", dependencies=[Depends(Authorizer('user', 'delete'))])
 async def delete_user(*,
     user: UserDep,
     current_user: DBCurrentUserDep,
@@ -118,7 +118,7 @@ async def delete_user(*,
     return { "sucesso": True }
 
 
-@router.post("/restore/{user_id}", dependencies=[Depends(Authorizer('user', 'restore'))])
+@router.post("/restore/{id}", dependencies=[Depends(Authorizer('user', 'restore'))])
 async def restore_user(*,
     user: UserDep,
     current_user: DBCurrentUserDep,

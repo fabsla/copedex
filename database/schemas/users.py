@@ -17,6 +17,9 @@ class PessoaBase(SQLModel):
     nome: str      = Field(default = None, min_length = 3, max_length = 255)
     
 class Pessoa (PessoaBase, table=True):
+    def __format__():
+        return 'Pessoa'
+
     user_id: int = Field(foreign_key = "user.id")
     user: 'User' = Relationship(back_populates = "pessoa")
 
@@ -40,6 +43,8 @@ class RoleBase(SQLModel):
     display_name: str = Field(default = None, min_length = 3, max_length = 25)
 
 class Role (RoleBase, table=True):
+    def __format__():
+        return 'Papel'
     pass
 
 '''
@@ -50,6 +55,9 @@ class UserBase(SQLModel):
     username: str  = Field(default=None, unique=True, min_length = 3, max_length=255)
     
 class User(UserBase, table=True):
+    def __format__():
+        return 'Usuário'
+    
     password: str = Field(min_length = 3, max_length=255)
     ativo: bool = Field(default = True)
 
