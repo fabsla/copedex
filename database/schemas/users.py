@@ -48,9 +48,6 @@ class Role (RoleBase, table=True):
 class UserBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
     username: str  = Field(default=None, unique=True, min_length = 3, max_length=255)
-
-class UserCreate(UserBase):
-    password: str = Field(min_length = 3, max_length=255)
     
 class User(UserBase, table=True):
     password: str = Field(min_length = 3, max_length=255)

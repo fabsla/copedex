@@ -1,21 +1,23 @@
 # Base
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status
 
 # Database
 from database.connection import DBSessionDep
+from database.utils import get_index, create_row, get_by_id, delete_row
 
 # Dependencies
-from apps.auth.utils import DBCurrentUserDep
+from apps.auth.utils import DBCurrentUserDep, get_password_hash
 from apps.users.dependencies import UserDep
 
 # Models
-from apps.users.models import Users, Roles
+from apps.users.utils import Users
 
 # Schemas
-from database.schemas.users import Pessoa, RoleBase, RoleName, RoleEnum, UserBase, UserCreate
-from apps.users.schemas import UserRestoreResponse
+from database.schemas.users import Pessoa, Role, RoleBase, RoleEnum, User, UserBase
+from apps.users.models.requests import UserCreate, RoleOptions
+from apps.users.models.responses import UserRestoreResponse
 
 # Utils
 from policies.utils import Authorizer, inspect_permission
@@ -29,14 +31,13 @@ router = APIRouter(
 '''
 Roles
 '''
-@router.get("/papeis", tags=['roles'], dependencies=[Depends(Authorizer('role', 'list'))])
+@router.get("/papeis", tags=['roles'], dependencies=[Depends(Authorizer('role', 'read_any'))])
 async def list_papeis(*,
     skip: int = 0,
     limit: int = 100,
     db: DBSessionDep,
-)-> RoleBase:
-
-    return Roles.index(skip = skip, limit = limit, db = db)
+)-> list[RoleBase]:
+    return get_index(model = Role, skip = skip, limit = limit, db = db)
     
 '''
 Users
@@ -44,14 +45,12 @@ Users
 @router.post("/", dependencies=[Depends(Authorizer('user', 'store'))])
 async def store_user(
     user: UserCreate,
-    role: RoleName,
+    role: RoleOptions,
     db: DBSessionDep,
 ) -> UserBase:
 
-    role_name = getattr(RoleEnum, role.name)
-
     try:
-        user = Users.create(username = user.username, password = user.password, role_id = role_name.value, db = db)
+        user = Users.create_user(user_data = user, role = role, db = db)
     except:
         raise
 
@@ -107,12 +106,12 @@ async def delete_user(*,
     
     if not should_force_delete:
         try:
-            Users.deactivate(user_id = user.id, db = db)
+            Users.deactivate(user = user, db = db)
         except:
             raise
     else:
         try:
-            Users.delete(user_id = user.id, db = db)
+            delete_row(model_instance = user, db = db)
         except:
             raise
 
@@ -134,7 +133,7 @@ async def restore_user(*,
         )
     
     try:
-        user = Users.restore(user_id = user.id, db = db)
+        user = Users.restore(user = user, db = db)
     except:
         raise
 

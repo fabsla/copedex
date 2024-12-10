@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import Depends
-from database.schemas.users import UserBase
-from apps.users.models import Users
+from database.schemas.users import UserBase, User
+from database.utils import ModelGetter
 
-UserDep = Annotated[UserBase, Depends(Users.get_by_id)]
+UserDep = Annotated[User, Depends(ModelGetter(User))]

@@ -15,12 +15,12 @@ import bcrypt
 # Database
 from sqlmodel import select, Session
 
+# Dependencies
+from .dependencies import oauth2_scheme
+
 # Schemas
 from database.schemas.auth import TokenData
 from database.schemas.users import User
-
-# Dependencies
-from .dependencies import oauth2_scheme
 
 '''
 ''  Password Hash
