@@ -43,11 +43,11 @@ class Problema(ProblemaBase, table=True):
     enunciado: str = Field(max_length=255, min_length=3)
     categoria: str = Field(max_length=255, min_length=3)
 
-    uploaders: list['User'] | None    = Relationship(back_populates = "problemas", link_model = Problema_User)
+    uploaders: list['User'] | None = Relationship(back_populates = "problemas", link_model = Problema_User)
 
-    evento_id: int | None         = Field(default=None, foreign_key="evento.id")
+    evento_id: int | None = Field(default=None, foreign_key="evento.id")
     evento: Evento | None = Relationship(back_populates = "problemas")
 
-    tags:   list[Tag]    | None = Relationship(back_populates = "problemas", link_model = Problema_Tag)
+    tags: list[Tag] | None = Relationship(back_populates = "problemas", link_model = Problema_Tag)
 
     sugestoes: list['Sugestoes'] | None = Relationship(back_populates = "problema")

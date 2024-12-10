@@ -23,7 +23,7 @@ class ProblemaRead(ProblemaBase):
     titulo: str | None = None
 
 class EventoRead(EventoBase):
-    titulo: list[str] | None = None
+    titulo: str | None = None
 
 class TagRead(TagBase):
-    nome: list[str] | None = None
+    nome: str | None = None

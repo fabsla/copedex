@@ -12,7 +12,11 @@ from apps.problemas.dependencies import ProblemaDep
 # Schemas
 from database.schemas.users import User
 from database.schemas.problemas import Evento, Problema, Pessoa, Role, Tag
-from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaCreate, TagRead
+from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaRead, ProblemaCreate, TagRead
+from apps.problemas.models.responses import ProblemaFullResponse
+
+# Utils
+from apps.problemas.utils import Problemas
 
 router = APIRouter(
     prefix = '/problemas',
@@ -25,25 +29,30 @@ Problemas
 '''
 @router.get("/problemas")
 async def list_problemas(*,
-    problema: ProblemaRead,
-    evento: EventoRead,
-    tags: TagRead,
+    problema: ProblemaRead | None,
+    eventos: list[EventoRead] | None,
+    tags: list[TagRead] | None,
     skip: int | None = None,
     limit: int = 100,
     db: DBSessionDep
-):
-    with Session(db_engine) as session:
-        query = select(Problema)
-        
-        # results = session.exec(query).all()
+) -> ProblemaFullResponse:
+    
+    problemas = Problemas.get(
+        problema = problema,
+        eventos = eventos,
+        tags = tags,
+        skip = skip,
+        limit = limit,
+        db = db
+    )
 
-    return results
+    return problemas
 
 
-@app.post("/problemas")
+@router.post("/problemas")
 async def store_problemas(
-    problema: Problema,
-    evento: Evento
+    problema: ProblemaCreate,
+    evento: EventoCreate,
 ):
     titulo: str,
     enunciado: str,
