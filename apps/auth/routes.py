@@ -60,7 +60,7 @@ async def signup(
 
     return user
 
-@router.post('/update_password')
+@router.post('/update-password')
 async def update_password(
     form_data: PasswordForm,
     current_user: DBCurrentUserDep,
