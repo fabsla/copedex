@@ -8,7 +8,7 @@ from database.utils import delete_row, get_index, upsert_row
 
 # Dependencies
 from apps.auth.utils import DBCurrentUserDep
-from apps.problemas.dependencies import TagDep
+from apps.problemas.dependencies import ProblemaDep, TagDep
 
 # Schemas
 from database.schemas.users import User
@@ -71,7 +71,7 @@ async def update_tags(
     tag: TagDep,
     tag_update: TagCreate,
     db: DBSessionDep
-    ):
+) -> TagSingleResponse:
 
     try:
         tag_updated = Tags.update(
@@ -85,38 +85,26 @@ async def update_tags(
     return tag_updated
 
 
-@app.delete("/tags/{tag_id}")
+@tag_router.delete("/{id}")
 async def delete_tags(
-    tag_id: int,
-    session: DBSessionDep
+    tag: TagDep,
+    db: DBSessionDep
 ):
-    tag = session.get(Tag, tag_id)
-
-    if tag is None:
-        return {
-            "success": False,
-            "message": "Não foram encontradas tags com o id informado!"
-        }
-    
-    session.delete(tag)
-    session.commit()
+    try:
+        delete_row(model_instance = tag, db = db)    
+    except:
+        raise
 
     return { "success": True }
 
 
-@app.post("/{problema_id}/atribuir_tags")
+@app.post("/{id}/atribuir_tags")
 async def atribuir_tags(
-    problema_id: int,
+    problema: ProblemaDep,
     tags: list[int],
     session: DBSessionDep
 ):
-    problema = session.get(Problema, problema_id)
-
-    if problema is None:
-        return {
-            "success": False,
-            "message": "Não foram encontrados problemas com o id informado!"
-        }
+    
 
     error_ids = []
 
