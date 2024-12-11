@@ -1,10 +1,15 @@
 from database.schemas.problemas import ProblemaBase, EventoBase, TagBase
 from sqlmodel import Field, SQLModel
+from pydantic import BaseModel
 
-class ProblemaCreate(ProblemaBase):
+class ProblemaCreate(BaseModel):
     titulo: str    = Field(default=None, max_length=255, min_length=3)
     enunciado: str = Field(max_length=255, min_length=3)
     categoria: str = Field(max_length=255, min_length=3)
+    autor: str | None             = None
+    dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)
+    limite_tempo: int | None      = None
+    limite_memoria_mb: int | None = None
 
 class EventoCreate(EventoBase):
     titulo: str = Field(default = None, max_length = 255, min_length = 3)
@@ -35,3 +40,27 @@ class EventoRead(EventoBase):
 
 class TagRead(TagBase):
     nome: str | None = None
+
+class ListCommonQueryParams(BaseModel):
+    skip: int = 0
+    limit: int = 100
+
+class TagListQueryParams(ListCommonQueryParams):
+    nome: str | None = None
+class EventoListQueryParams(ListCommonQueryParams):
+    titulo: str | None = None
+
+class ProblemaListQueryParams(ListCommonQueryParams):
+    titulo: str | None = None
+    categoria: str | None = None
+    enunciado: str | None = None
+    limite_tempo_inf: int | None = None
+    limite_tempo_sup: int | None = None
+    limite_memoria_inf: int | None = None
+    limite_memoria_sup: int | None = None
+
+    autor: str | None       = None
+    dificuldade: str | None = None
+
+    eventos: list[str] = None
+    tags: list[str] = None

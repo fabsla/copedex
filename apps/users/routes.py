@@ -18,6 +18,7 @@ from apps.users.utils import Users
 from database.schemas.users import Pessoa, Role, RoleBase, RoleEnum, User, UserBase
 from apps.users.models.requests import UserCreate, RoleOptions
 from apps.users.models.responses import UserRestoreResponse
+from apps.problemas.models.responses import ProblemaFullResponse
 
 # Utils
 from policies.utils import Authorizer, check_permissions
@@ -120,3 +121,16 @@ async def restore_user(*,
         raise
 
     return {"sucesso": True, "user": user}
+
+'''
+Problemas de autor
+'''
+@router.get("/{id}/problemas")
+async def index_problemas_autor(
+    user: UserDep,
+    session: DBSessionDep
+) -> list[ProblemaFullResponse]:  
+    
+    problemas = user.problemas
+
+    return problemas

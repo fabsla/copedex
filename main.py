@@ -30,7 +30,8 @@ from database.schemas.problemas import Evento, Problema, Tag, Problema_User, Pro
 
 # Routers
 from apps.auth.routes import router as auth_router
-from apps.users.routes import router as user_router
+from apps.users.routes import router as users_router
+from apps.problemas.routes import router as problemas_router
 
 # Utils
 
@@ -57,7 +58,8 @@ app.add_middleware(
 
 # Routers
 app.include_router(auth_router)
-app.include_router(user_router)
+app.include_router(users_router)
+app.include_router(problemas_router)
 
 @app.get("/")
 async def root():
@@ -76,211 +78,6 @@ Testes
 # ):
 #     permission = can('User', 'create', 'admin')
 #     return { 'message' : permission }
-
-
-'''
-Tags
-'''
-@app.get("/tags")
-async def list_tags(*,
-    tag_id: int | None = None,
-    nome: str | None = None,
-    session: DBSessionDep
-    ):
-    
-    query = select(Tag)
-
-    if tag_id:
-        query = query.where(Tag.id == tag_id)
-    if nome:
-        query = query.where(Tag.nome == nome)
-    
-    tags = session.exec(query).all()
-
-    return tags
-
-
-@app.post("/tags")
-async def store_tags(
-    tag: Tag,
-    session: DBSessionDep
-    ):
-
-    tag_db = Tag(nome = tag.nome)
-    
-    session.add(tag_db)
-    session.commit()
-
-    return { "success": True }
-
-
-@app.post("/tags/{tag_id}")
-async def update_tags(
-    tag_id: int,
-    nome: str,
-    session: DBSessionDep
-    ):
-
-    tag = session.get(Tag, tag_id)
-
-    if tag is None:
-        return {
-            "success": False,
-            "message": "Não foram encontradas tags com o id informado!"
-        }
-
-    tag.nome = nome
-
-    session.add(tag)
-    session.commit()
-
-    return {
-        "success": True
-    }
-
-
-@app.delete("/tags/{tag_id}")
-async def delete_tags(
-    tag_id: int,
-    session: DBSessionDep
-):
-    tag = session.get(Tag, tag_id)
-
-    if tag is None:
-        return {
-            "success": False,
-            "message": "Não foram encontradas tags com o id informado!"
-        }
-    
-    session.delete(tag)
-    session.commit()
-
-    return { "success": True }
-
-
-@app.post("/{problema_id}/atribuir_tags")
-async def atribuir_tags(
-    problema_id: int,
-    tags: list[int],
-    session: DBSessionDep
-):
-    problema = session.get(Problema, problema_id)
-
-    if problema is None:
-        return {
-            "success": False,
-            "message": "Não foram encontrados problemas com o id informado!"
-        }
-
-    error_ids = []
-
-    for tag_id in tags:
-        tag = session.get(Tag, tag_id)
-
-        if tag is None:
-            error_ids.append(tag_id)
-            continue
-
-        tag.problemas.append(problema)
-        session.add(tag)
-
-    session.commit()
-
-
-'''
-Eventos
-'''
-@app.get("/eventos")
-async def list_eventos(*,
-    evento_id: int | None = None,
-    titulo: str | None = None,
-    session: DBSessionDep
-    ):
-    
-    query = select(Evento)
-    
-    if evento_id:
-        query = query.where(Evento.id == evento_id)
-    if titulo:
-        query = query.where(Evento.titulo == titulo)
-    
-    eventos = session.exec(query).all()
-
-    return eventos
-
-
-@app.get("/eventos/{evento_id}")
-async def read_eventos(
-    evento_id: int,
-    session: DBSessionDep
-):
-    evento = session.get(Evento, evento_id)
-
-    if evento is None:
-        return {
-            "success": False,
-            "message": "Não foram encontrados eventos com o id informado!"
-        }
-    
-    return evento
-
-
-@app.post("/eventos")
-async def store_eventos(
-    evento: Evento,
-    session: DBSessionDep
-):
-    evento_db = Evento(
-        titulo = evento.titulo
-    )
-
-    session.add(evento_db)
-    session.commit()
-
-    return { "success": True }
-
-
-@app.post("/eventos/{evento_id}")
-async def update_eventos(
-    evento_id: int,
-    titulo: str,
-    session: DBSessionDep
-):
-    evento = session.get(Evento, evento_id)
-
-    if evento is None:
-        return {
-            "success": False,
-            "message": "Não foram encontrados eventos com o id informado!"
-        }
-    
-    evento.titulo = titulo
-    
-    session.add(evento)
-    session.commit()
-
-    return { "success": True }
-
-
-@app.delete("/eventos/{evento_id}")
-async def delete_eventos(
-    evento_id: int,
-    session: DBSessionDep
-    ):
-    
-    evento = session.get(Evento, evento_id)
-
-    if evento is None:
-        return {
-            "success": False,
-            "message": "Não foram encontrados eventos com o id informado!"
-        }
-    
-    session.delete(evento)
-    session.commit()
-
-    return { "success": True }
-
 
 '''
 Sugestões
