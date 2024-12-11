@@ -13,7 +13,7 @@ from apps.problemas.dependencies import ProblemaDep
 # Schemas
 from database.schemas.users import User
 from database.schemas.problemas import Evento, Problema, Pessoa, Role, Tag
-from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaRead, ProblemaCreate, TagRead
+from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaRead, ProblemaCreate, ProblemaUpdate, TagRead
 from apps.problemas.models.responses import ProblemaFullResponse
 
 # Utils
@@ -78,38 +78,16 @@ async def read_problemas(
     return problema
 
 
-@router.put("/problemas/{id}",, dependencies=[Depends(Authorizer('problema', 'update'))])
-async def update_problemas(
+@router.put("/problemas/{id}", dependencies=[Depends(Authorizer('problema', 'update'))])
+async def update_problemas(*,
     problema: ProblemaDep,
-    problema_update: ProblemaRead,
-    evento_update: EventoRead,
-    tags: list[TagRead],
+    problema_update: ProblemaUpdate | None = None,
+    evento_update: EventoRead | None = None,
+    tags: list[TagRead] | None = None,
     db: DBSessionDep,
 ) -> ProblemaFullResponse:
 
-    check_permissions(model = 'problema', ability = 'update', problema = problema)
-    
-    problema = Problemas.update(
-        problema = problema,
-        problema_update = problema_update,
-        evento_update = evento_update,
-        tags = tags,
-        db = db
-    )
-    # problema.titulo = problema_update.titulo
-    # problema.enunciado = problema_update.enunciado
-    # problema.limite_tempo = problema_update.limite_tempo
-    # problema.limite_memoria_mb = problema_update.limite_memoria_mb
-    # problema.categoria = problema_update.categoria
-    # problema.dificuldade = problema_update.dificuldade
-    # problema.autor = problema_update.autor
-    # problema.evento = problema_update.evento
-    
-    # problema = upsert_row(
-    #     model_instance
-    # )
-
-    return problema
+    return problema_updated
 
 
 @app.patch("/problemas/{problema_id}")

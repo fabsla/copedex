@@ -1,5 +1,5 @@
 from database.schemas.problemas import ProblemaBase, EventoBase, TagBase
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 
 class ProblemaCreate(ProblemaBase):
     titulo: str    = Field(default=None, max_length=255, min_length=3)
@@ -11,6 +11,14 @@ class EventoCreate(EventoBase):
 
 class TagCreate(TagBase):
     nome: str = Field(default = None, max_length = 255, min_length = 3)
+
+class ProblemaUpdate(SQLModel):
+    titulo: str | None            = None
+    enunciado: str | None         = None
+    autor: str | None             = None
+    dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)
+    limite_tempo: int | None      = None
+    limite_memoria_mb: int | None = None
 
 class ProblemaRead(ProblemaBase):
     categoria: str | None = None

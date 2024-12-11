@@ -4,17 +4,20 @@ from fastapi import HTTPException, status
 
 # Database
 from database.connection import DBSessionDep
+from database.utils import upsert_row, delete_row
 from sqlmodel import select
+
+# Dependencies
+from apps.problemas.dependencies import ProblemaDep
 
 # Schemas
 from database.schemas.problemas import Problema, Evento, Tag
 from database.schemas.users import User
-from apps.problemas.models.requests import EventoRead, ProblemaRead, TagRead
+from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaUpdate, TagRead
 
 class Problemas:
 
     def create(*
-        
         db: DBSessionDep,
     ) -> Problema:
         
@@ -28,9 +31,9 @@ class Problemas:
             autor=autor,
             evento_id=evento_id,
         )
+
         try:
-            db.add(problema)
-            db.commit()
+            upsert_row(model = Problema, model_instance = problema, db = db)
         except:
             raise HTTPException(
                     status_code = status.HTTP_409_CONFLICT,
@@ -100,5 +103,46 @@ class Problemas:
         
         return problemas if problemas else False
 
-    
-    
+    def update(*,
+        problema: ProblemaDep,
+        problema_update: ProblemaUpdate | None = None,
+        evento_update: EventoRead | None = None,
+        tags: list[TagRead] | None = None,
+        db: DBSessionDep,
+    ):
+        # if problema_update is not None:
+        #     if problema_update.titulo:
+        #         problema.titulo = problema_update.titulo
+        #     if problema_update.enunciado:
+        #         problema.enunciado = problema_update.enunciado
+        #     if problema_update.autor:
+        #         problema.autor = problema_update.autor
+        #     if problema_update.dificuldade:
+        #         problema.dificuldade = problema_update.dificuldade
+        #     if problema_update.limite_tempo:
+        #         problema.limite_tempo = problema_update.limite_tempo
+        #     if problema_update.limite_memoria_mb:
+        #         problema.limite_memoria_mb = problema_update.limite_memoria_mb
+
+        for attr in dir(problema):
+            if not attr.startswith('_') and not callable(getattr(problema, attr)):
+                if getattr(problema, attr) != getattr(problema_update, attr):
+                    setattr(problema, attr, getattr(problema_update, attr))
+
+        if evento_update is not None:
+            evento = db.get(Evento, evento_update.id)
+            if evento is not None:
+                problema.evento = evento
+        
+        if tags is not None:
+            tags_query = select(Tag).where(tag.id == Tag.id for tag in tags)
+            tags = db.exec(tags_query).all()
+            if evento is not None:
+                problema.tags = tags
+        
+        try:
+            problema_updated = upsert_row(model_instance = problema, db = db)
+        except:
+            raise
+
+        return problema_updated
