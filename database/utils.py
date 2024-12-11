@@ -9,7 +9,7 @@ from sqlmodel import SQLModel, select
 # Exceptions
 from sqlalchemy.exc import IntegrityError
 
-def create_row(
+def upsert_row(
     model_instance: SQLModel,
     db: DBSessionDep
 ) -> SQLModel:

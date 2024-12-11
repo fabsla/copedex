@@ -8,7 +8,7 @@ from sqlmodel import select
 
 # Dependencies
 from apps.auth.utils import get_password_hash
-from database.utils import create_row
+from database.utils import upsert_row
 
 # Schemas
 from database.schemas.users import Pessoa, Role, User, RoleEnum
@@ -30,7 +30,7 @@ class Users:
         user_data = User(username=user_data.username, password=hashed_password, role_id = role_name.value)
 
         try:
-            user = create_row(model_instance = user_data, db = db)
+            user = upsert_row(model_instance = user_data, db = db)
         except IntegrityError:
             raise HTTPException(
                 status_code = status.HTTP_409_CONFLICT,
