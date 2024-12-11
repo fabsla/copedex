@@ -4,17 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 # Database
 from database.connection import DBSessionDep
-from database.utils import delete_row, get_index
+from database.utils import delete_row, get_index, upsert_row
 
 # Dependencies
 from apps.auth.utils import DBCurrentUserDep
-from apps.problemas.dependencies import ProblemaDep
+from apps.problemas.dependencies import TagDep
 
 # Schemas
 from database.schemas.users import User
 from database.schemas.problemas import Evento, Problema, Tag
-from apps.problemas.models.requests import EventoCreate, EventoRead, TagRead, TagListQueryParams
-from apps.problemas.models.responses import TagSingleResponse, ProblemaFullResponse
+from apps.problemas.models.requests import TagCreate, TagRead, TagListQueryParams
+from apps.problemas.models.responses import TagSingleResponse, ProblemaSingleResponse
 
 # Utils
 from policies.utils import Authorizer, check_permissions
@@ -43,44 +43,46 @@ async def list_tags(*,
 
     return tag_results
 
+@tag_router.get('/{id}/problemas')
+async def read_tag_problemas(
+    tag: TagDep,
+) -> list[ProblemaSingleResponse]:
+    
+    return tag.problemas
 
 @tag_router.post("/")
 async def store_tags(*,
-    tag: Tag,
-    session: DBSessionDep
-):
+    tag: TagCreate,
+    db: DBSessionDep
+) -> TagSingleResponse:
 
-    tag_db = Tag(nome = tag.nome)
+    tag = Tag(**tag.model_dump())
     
-    session.add(tag_db)
-    session.commit()
+    try:
+        tag_result = upsert_row(model_instance = tag, db = db)
+    except:
+        raise
 
-    return { "success": True }
+    return tag_result
 
 
-@app.post("/tags/{tag_id}")
+@tag_router.post("/{id}")
 async def update_tags(
-    tag_id: int,
-    nome: str,
-    session: DBSessionDep
+    tag: TagDep,
+    tag_update: TagCreate,
+    db: DBSessionDep
     ):
 
-    tag = session.get(Tag, tag_id)
+    try:
+        tag_updated = Tags.update(
+            evento = tag,
+            tag_update = tag_update,
+            db = db
+        )
+    except:
+        raise
 
-    if tag is None:
-        return {
-            "success": False,
-            "message": "Não foram encontradas tags com o id informado!"
-        }
-
-    tag.nome = nome
-
-    session.add(tag)
-    session.commit()
-
-    return {
-        "success": True
-    }
+    return tag_updated
 
 
 @app.delete("/tags/{tag_id}")
