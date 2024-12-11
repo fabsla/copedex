@@ -14,15 +14,7 @@ from apps.problemas.models.requests import EventoRead, ProblemaRead, TagRead
 class Problemas:
 
     def create(*
-        titulo: str,
-        enunciado: str,
-        limite_tempo: int | None = None,
-        limite_memoria_mb: int | None = None,
-        categoria: str | None = None,
-        dificuldade: str | None = None,
-        autor: str | None = None,
-        evento_id: int | None = None,
-        uploaders: list[User] | None = None,
+        
         db: DBSessionDep,
     ) -> Problema:
         

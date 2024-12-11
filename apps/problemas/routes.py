@@ -1,9 +1,10 @@
 # Base
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 # Database
 from database.connection import DBSessionDep
+from database.utils import upsert_row
 
 # Dependencies
 from apps.auth.utils import DBCurrentUserDep
@@ -16,6 +17,7 @@ from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaRea
 from apps.problemas.models.responses import ProblemaFullResponse
 
 # Utils
+from policies.utils import Authorizer, check_permissions
 from apps.problemas.utils import Problemas
 
 router = APIRouter(
@@ -27,7 +29,7 @@ router = APIRouter(
 '''
 Problemas
 '''
-@router.get("/problemas")
+@router.get("/")
 async def list_problemas(*,
     problema: ProblemaRead | None,
     eventos: list[EventoRead] | None,
@@ -35,7 +37,7 @@ async def list_problemas(*,
     skip: int | None = None,
     limit: int = 100,
     db: DBSessionDep
-) -> ProblemaFullResponse:
+) -> list[ProblemaFullResponse]:
     
     problemas = Problemas.get(
         problema = problema,
@@ -49,82 +51,63 @@ async def list_problemas(*,
     return problemas
 
 
-@router.post("/problemas")
+@router.post("/", dependencies=[Depends(Authorizer('problema', 'store'))])
 async def store_problemas(
     problema: ProblemaCreate,
-    evento: EventoCreate,
-):
-    titulo: str,
-    enunciado: str,
-    limite_tempo: int | None = None,
-    limite_memoria_mb: int | None = None,
-    categoria: str | None = None,
-    dificuldade: str | None = None,
-    autor: str | None = None,
-    evento: str | None = None
+    evento: EventoRead,
+    tags: TagRead,
+    current_user: DBCurrentUserDep,
+    db: DBSessionDep,
+) -> ProblemaFullResponse:
+    
     problema = Problemas.create(
-        titulo=titulo,
-        enunciado=enunciado,
-        limite_tempo=limite_tempo,
-        limite_memoria_mb=limite_memoria_mb,
-        categoria=categoria,
-        dificuldade=dificuldade,
-        autor=autor,
-        evento=evento,
+        problema = problema,
+        evento = evento,
+        tags = tags,
+        current_user = current_user,
+        db = db
     )
 
-    with Session(db_engine) as session:
-        session.add(problema)
-        session.commit()
-        session.refresh(problema)
-
     return problema
 
 
-@app.get("/problemas/{id}")
-async def read_problemas(id):
-    with Session(db_engine) as session:
-        # query = select(Problema).where(Problema.id == id)
-        # results = session.exec(query).first()
-        problema = session.get(Problema, id)
-
-        if problema is None:
-            return { "message" : "Não foram encontrados problemas com o id informado!" }
-
-    # problema = list(filter(lambda prob: (prob['id'] == int(id)), problemas))
+@router.get("/problemas/{id}")
+async def read_problemas(
+    problema: ProblemaDep,
+) -> ProblemaFullResponse:
     return problema
 
 
-@app.put("/problemas/{problema_id}")
-async def update_problemas(problema_id,
-        titulo: str,
-        enunciado: str,
-        limite_tempo: int,
-        limite_memoria_mb: int,
-        categoria: str,
-        dificuldade: str,
-        autor: str,
-        evento: str
-    ):
-    with Session(db_engine) as session:
-        query = select(Problema).where(Problema.id == problema_id)
-        problema = session.exect(query).first()
+@router.put("/problemas/{id}",, dependencies=[Depends(Authorizer('problema', 'update'))])
+async def update_problemas(
+    problema: ProblemaDep,
+    problema_update: ProblemaRead,
+    evento_update: EventoRead,
+    tags: list[TagRead],
+    db: DBSessionDep,
+) -> ProblemaFullResponse:
 
-        if problema is None:
-            return { "message" : "Não foram encontrados problemas com o id informado!" }
-        
-        problema.titulo = titulo
-        problema.enunciado = enunciado
-        problema.limite_tempo = limite_tempo
-        problema.limite_memoria_mb = limite_memoria_mb
-        problema.categoria = categoria
-        problema.dificuldade = dificuldade
-        problema.autor = autor
-        problema.evento = evento
-        
-        session.add(problema)
-        session.commit()
-        session.refresh(problema)
+    check_permissions(model = 'problema', ability = 'update', problema = problema)
+    
+    problema = Problemas.update(
+        problema = problema,
+        problema_update = problema_update,
+        evento_update = evento_update,
+        tags = tags,
+        db = db
+    )
+    # problema.titulo = problema_update.titulo
+    # problema.enunciado = problema_update.enunciado
+    # problema.limite_tempo = problema_update.limite_tempo
+    # problema.limite_memoria_mb = problema_update.limite_memoria_mb
+    # problema.categoria = problema_update.categoria
+    # problema.dificuldade = problema_update.dificuldade
+    # problema.autor = problema_update.autor
+    # problema.evento = problema_update.evento
+    
+    # problema = upsert_row(
+    #     model_instance
+    # )
 
     return problema
 

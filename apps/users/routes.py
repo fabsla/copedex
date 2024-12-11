@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 # Database
 from database.connection import DBSessionDep
-from database.utils import get_index, create_row, get_by_id, delete_row
+from database.utils import get_index, upsert_row, get_by_id, delete_row
 
 # Dependencies
 from apps.auth.utils import DBCurrentUserDep, get_password_hash
@@ -20,7 +20,7 @@ from apps.users.models.requests import UserCreate, RoleOptions
 from apps.users.models.responses import UserRestoreResponse
 
 # Utils
-from policies.utils import Authorizer, inspect_permission
+from policies.utils import Authorizer, check_permissions
 
 router = APIRouter(
     prefix = '/users',
@@ -63,18 +63,13 @@ async def read_user_me(
 ) -> UserBase:
     return current_user
 
-@router.get("/{id}", dependencies=[Depends(Authorizer('user', 'read_any'))])
+@router.get("/{id}", dependencies=[Depends(Authorizer('user', 'read'))])
 async def read_user(
     user: UserDep,
     current_user: DBCurrentUserDep,
 ) -> UserBase:
     
-    permission = inspect_permission(model = 'user', ability = 'read', user = current_user, object_user = user)
-    if not permission:
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Você não possui permissão para executar esta ação!"
-        )
+    check_permissions(model = 'user', ability = 'read', user = current_user, object_user = user)
 
     return user
 
@@ -85,7 +80,7 @@ async def list_users(*,
     db: DBSessionDep,
 ) -> list[UserBase]:
 
-    return Users.index(offset = skip, limit = limit, db = db)
+    return get_index(model = User, skip = skip, limit = limit, db = db)
 
 @router.delete("/{id}", dependencies=[Depends(Authorizer('user', 'delete'))])
 async def delete_user(*,
@@ -97,23 +92,15 @@ async def delete_user(*,
     should_force_delete = not user.ativo
     ability = 'delete' if not should_force_delete else 'force_delete'
     
-    permission = inspect_permission(model = 'user', ability = ability, user = current_user, object_user = user)
-    if not permission:
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Você não possui permissão para executar esta ação!"
-        )
+    check_permissions(model = 'user', ability = ability, user = current_user, object_user = user)
     
-    if not should_force_delete:
-        try:
+    try:
+        if not should_force_delete:
             Users.deactivate(user = user, db = db)
-        except:
-            raise
-    else:
-        try:
+        else:
             delete_row(model_instance = user, db = db)
-        except:
-            raise
+    except:
+        raise
 
     return { "sucesso": True }
 
@@ -124,14 +111,9 @@ async def restore_user(*,
     current_user: DBCurrentUserDep,
     db: DBSessionDep,
 ) -> UserRestoreResponse:
-    
-    permission = inspect_permission(model = 'user', ability = 'restore', user = current_user, object_user = user)
-    if not permission:
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Você não possui permissão para executar esta ação!"
-        )
-    
+
+    check_permissions(model = 'user', ability = 'restore', user = current_user, object_user = user)
+
     try:
         user = Users.restore(user = user, db = db)
     except:
