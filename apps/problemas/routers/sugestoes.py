@@ -4,17 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 # Database
 from database.connection import DBSessionDep
-from database.utils import delete_row, get_index, upsert_row
+from database.utils import delete_row
 
 # Dependencies
 from apps.auth.utils import DBCurrentUserDep
-from apps.problemas.dependencies import ProblemaDep, SugestaoDep
+from apps.problemas.dependencies import SugestaoDep
 
 # Schemas
 from database.schemas.users import User
-from database.schemas.problemas import Problema, Status_Sugestao
-from apps.problemas.models.requests import SugestaoRead, SugestaoCreate, SugestaoListQueryParams
-from apps.problemas.models.responses import SugestaoSingleResponse, SugestaoFullResponse, ProblemaSingleResponse
+from database.schemas.problemas import Status_Sugestao
+from apps.problemas.models.requests import SugestaoRead, SugestaoListQueryParams
+from apps.problemas.models.responses import SugestaoSingleResponse
 
 # Utils
 from policies.utils import Authorizer, check_permissions
@@ -26,7 +26,7 @@ sugestao_router = APIRouter(
     responses = { 404: {'description': 'Sugestão não encontrada'}},
 )
 
-@sugestao_router.get("/")
+@sugestao_router.get("/", dependencies=[Depends(Authorizer('sugestao', 'index'))])
 async def list_sugestoes(*,
     params: SugestaoListQueryParams,
     db: DBSessionDep
@@ -47,7 +47,7 @@ async def list_sugestoes(*,
     return sugestoes_results
 
 
-@sugestao_router.get("/{id}/votos")
+@sugestao_router.get("/{id}/votos", dependencies=[Depends(Authorizer('sugestao', 'view'))])
 async def read_votos_sugestao(
     sugestao: SugestaoDep,
     db: DBSessionDep,
@@ -56,7 +56,7 @@ async def read_votos_sugestao(
     return sugestao
 
 
-@sugestao_router.post("/{id}/votar")
+@sugestao_router.post("/{id}/votar", dependencies=[Depends(Authorizer('sugestao', 'votar'))])
 async def votar_sugestao(
     sugestao: SugestaoDep,
     voto: bool,
@@ -77,12 +77,16 @@ async def votar_sugestao(
     return sugestao_result
 
 
-@sugestao_router.patch("/{id}/status")
+@sugestao_router.patch("/{id}/status", dependencies=[Depends(Authorizer('sugestao', 'update'))])
 async def alterar_status_sugestao(
     sugestao: SugestaoDep,
     status: Status_Sugestao,
+    current_user: DBCurrentUserDep,
     db: DBSessionDep
 ) -> SugestaoSingleResponse:
+    
+    check_permissions(model = 'sugestao', ability = 'update', user = current_user, problema = sugestao.problema)
+
     try:
         sugestao_result = Sugestoes.update_status(
             sugestao = sugestao,
@@ -96,14 +100,18 @@ async def alterar_status_sugestao(
     
 
 
-@app.delete("/sugestoes/{sugestao_id}")
+@sugestao_router.delete("/{id}", dependencies=[Depends(Authorizer('sugestao', 'delete'))])
 async def delete_sugestao(
-    sugestao_id: int,
-    session: DBSessionDep
+    sugestao: SugestaoDep,
+    current_user: DBCurrentUserDep,
+    db: DBSessionDep
 ):
-    query = select(Sugestoes).where(Sugestoes.id == sugestao_id)
-    sugestao = session.exec(query).first()
+    check_permissions(model = 'sugestao', ability = 'delete', user = current_user, sugestao = sugestao)
     
-    session.delete(sugestao)
-    session.commit()
+    try:
+        delete_row(model_instance = sugestao, db = db)
+    except:
+        raise
+
+    return { 'sucesso': True }
     

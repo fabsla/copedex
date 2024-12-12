@@ -2,12 +2,10 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, SQLModel, Relationship
 from enum import Enum
 
-from database.schemas.problemas import Problema_User
-from apps.sugestoes.schemas import Sugestoes_User
+from database.schemas.problemas import Problema_User, Sugestao_User
 
 if TYPE_CHECKING:
-    from database.schemas.problemas import Problema
-    from apps.sugestoes.schemas import Sugestoes
+    from database.schemas.problemas import Problema, Sugestoes
 
 '''
 ''  Pessoa
@@ -69,7 +67,7 @@ class User(UserBase, table=True):
     problemas: list["Problema"] | None = Relationship(back_populates = "uploaders", link_model = Problema_User)
 
     sugestoes_criadas: list['Sugestoes'] | None = Relationship(back_populates = 'autor')
-    sugestoes_votadas: list['Sugestoes_User'] | None = Relationship(back_populates = 'user')
+    sugestoes_votadas: list['Sugestao_User'] | None = Relationship(back_populates = 'user')
 
     def has_role(self, role: str):
         return self.role.id_name in role.split('|')

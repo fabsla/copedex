@@ -4,10 +4,9 @@ import uvicorn # para testes
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import select
 
 # DB
-from database.connection import init_db, DBSessionDep
+from database.connection import init_db
 from database.seeders.roles import RoleSeeder
 
 # App
@@ -18,7 +17,6 @@ from config import settings
 # Models
 
 # Schemas
-from database.schemas.problemas import Status_Sugestao, Sugestoes, Sugestoes_User
 
 # Routers
 from apps.auth.routes import router as auth_router

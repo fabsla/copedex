@@ -1,4 +1,4 @@
-from database.schemas.problemas import ProblemaBase, EventoBase, TagBase, Status_Sugestao
+from database.schemas.problemas import ProblemaBase, EventoBase, TagBase, Status_Sugestao, SugestaoBase
 from sqlmodel import Field, SQLModel
 from pydantic import BaseModel
 
@@ -16,6 +16,11 @@ class EventoCreate(EventoBase):
 
 class TagCreate(TagBase):
     nome: str = Field(default = None, max_length = 255, min_length = 3)
+
+class SugestaoCreate(BaseModel):
+    id: int | None = Field(default = None, primary_key = True)
+    descricao: str = Field(min_length = 3, max_length = 255)
+    status: Status_Sugestao = Status_Sugestao.ativa
 
 class ProblemaUpdate(SQLModel):
     titulo: str | None            = None
@@ -40,6 +45,11 @@ class EventoRead(EventoBase):
 
 class TagRead(TagBase):
     nome: str | None = None
+
+class SugestaoRead(BaseModel):
+    id: int | None = None
+    descricao: str | None = None
+    status: Status_Sugestao = Status_Sugestao.ativa
 
 class ListCommonQueryParams(BaseModel):
     skip: int = 0
