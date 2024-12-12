@@ -96,26 +96,3 @@ async def delete_tags(
         raise
 
     return { "success": True }
-
-
-@app.post("/{id}/atribuir_tags")
-async def atribuir_tags(
-    problema: ProblemaDep,
-    tags: list[int],
-    session: DBSessionDep
-):
-    
-
-    error_ids = []
-
-    for tag_id in tags:
-        tag = session.get(Tag, tag_id)
-
-        if tag is None:
-            error_ids.append(tag_id)
-            continue
-
-        tag.problemas.append(problema)
-        session.add(tag)
-
-    session.commit()

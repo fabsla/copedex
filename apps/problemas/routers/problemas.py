@@ -111,3 +111,18 @@ async def delete_problemas_autor(
         raise
 
     return { 'sucesso': True }
+
+@problema_router.post("/{id}/atribuir_tags")
+async def atribuir_tags(
+    problema: ProblemaDep,
+    tags: list[TagRead],
+    db: DBSessionDep
+):
+    try:
+        tags, errors = Problemas.atribuir_tags(
+            problema = problema,
+            tags = tags,
+            db = db
+        )
+    except:
+        raise

@@ -1,5 +1,5 @@
 # Base
-from typing import Annotated
+from typing import Annotated, Tuple
 from fastapi import HTTPException, status
 
 # Database
@@ -16,6 +16,33 @@ from database.schemas.users import User
 from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaCreate, ProblemaRead, ProblemaUpdate, TagRead
 
 class Problemas:
+
+    def atribuir_tags(*,
+        problema: ProblemaDep,
+        tags: list[TagRead] | None = None,
+        db: DBSessionDep
+    ) -> Tuple[list[Tag], list[TagRead]]:
+
+        tags_inseridas = []
+        tags_nao_encontradas = []
+        
+        for tag in tags:
+            tag_lookup = db.get(Tag, tag.id)
+
+            if tag is None:
+                tags_nao_encontradas.append(tag)
+                continue
+
+            problema.tags.append(tag_lookup)
+            tags_inseridas.append(tag_lookup)
+        
+        try:
+            problema = upsert_row(model_instance = problema, db = db)
+        except:
+            raise
+
+        return tags_inseridas, tags_nao_encontradas
+
 
     def create(*,
         problema: ProblemaCreate,
