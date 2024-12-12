@@ -1,9 +1,19 @@
 from typing import TYPE_CHECKING
 from sqlmodel import Field, SQLModel, Relationship
+from enum import Enum
 
 if TYPE_CHECKING:
     from database.schemas.users import User, Pessoa, Role
-    from apps.sugestoes.schemas import Sugestoes
+
+class Status_Sugestao(str, Enum):
+    ativa     = 'ativa'     # padrao
+    cancelada = 'cancelada' # cancelada por autor da sugestao
+
+    # acoes por proprietario do problema
+    rejeitada = 'rejeitada'
+    aceita    = 'aceita'    # aceita mas ainda nao implementada
+    aplicada  = 'aplicada'  # aceita e implementada
+
 
 class Problema_Tag(SQLModel, table=True):
     problema_id: int | None = Field(default = None, foreign_key = "problema.id", primary_key = True)
@@ -13,6 +23,10 @@ class Problema_Tag(SQLModel, table=True):
 class Problema_User(SQLModel, table=True):
     problema_id: int | None = Field(default = None, foreign_key = "problema.id", primary_key= True)
     user_id: int | None     = Field(default = None, foreign_key = "user.id",     primary_key= True)
+
+class Problema_Sugestao(SQLModel, table=True):
+    problema_id: int | None = Field(default = None, foreign_key = 'problema.id',  primary_key = True)
+    sugestao_id: int | None = Field(default = None, foreign_key = 'sugestoes.id', primary_key = True)
 
 
 class TagBase(SQLModel):
@@ -50,4 +64,41 @@ class Problema(ProblemaBase, table=True):
 
     tags: list[Tag] | None = Relationship(back_populates = "problemas", link_model = Problema_Tag)
 
-    sugestoes: list['Sugestoes'] | None = Relationship(back_populates = "problema")
+    sugestoes: list['Sugestao'] | None = Relationship(back_populates = "problema")
+
+
+class Sugestao_User(SQLModel, table=True):
+    sugestao_id: int | None = Field(default = None, foreign_key = "sugestoes.id", primary_key = True)
+    user_id:     int | None = Field(default = None, foreign_key = "user.id",      primary_key = True)
+    voto: bool
+
+    sugestao: "Sugestao" = Relationship(back_populates = "votantes")
+    user: "User" = Relationship(back_populates = 'sugestoes_votadas')
+
+class SugestaoBase(SQLModel):
+    id: int | None = Field(default = None, primary_key = True)
+    descricao: str = Field(min_length = 3, max_length = 255)
+    status: Status_Sugestao = Status_Sugestao.ativa
+
+class Sugestao(SugestaoBase, table=True):
+    problema_id: int = Field(foreign_key = "problema.id")
+    problema: 'Problema' = Relationship(back_populates = 'sugestoes')
+    
+    autor_id: int = Field(foreign_key = "user.id")
+    autor: 'User' = Relationship(back_populates = 'sugestoes_criadas')
+
+    votantes: list['Sugestao_User'] = Relationship(back_populates = 'sugestao')
+    
+    def upvotes(self):
+        return [ votante for votante in self.votantes if votante.voto == True ]
+    
+    @property
+    def upvotes_count(self):
+        return len(self.upvotes())
+    
+    def downvotes(self):
+        return [ votante for votante in self.votantes if votante.voto == False ]
+    
+    @property
+    def downvotes_count(self):
+        return len(self.downvotes())

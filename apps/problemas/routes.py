@@ -24,9 +24,11 @@ from apps.problemas.utils import Problemas, Eventos, Tags
 from .routers.problemas import problema_router
 from .routers.eventos import evento_router
 from .routers.tags import tag_router
+from .routers.sugestoes import sugestao_router
 
 router = APIRouter()
 
 router.include_router(problema_router)
 router.include_router(evento_router)
 router.include_router(tag_router)
+router.include_router(sugestao_router)

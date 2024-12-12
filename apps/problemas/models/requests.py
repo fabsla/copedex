@@ -1,4 +1,4 @@
-from database.schemas.problemas import ProblemaBase, EventoBase, TagBase
+from database.schemas.problemas import ProblemaBase, EventoBase, TagBase, Status_Sugestao
 from sqlmodel import Field, SQLModel
 from pydantic import BaseModel
 
@@ -64,3 +64,12 @@ class ProblemaListQueryParams(ListCommonQueryParams):
 
     eventos: list[str] = None
     tags: list[str] = None
+
+class SugestaoListQueryParams(ListCommonQueryParams):
+    descricao: str | None = Field(min_length = 3, max_length = 255)
+    status: Status_Sugestao | None = None
+
+    upvotes_limite_inf: int | None = None
+    upvotes_limite_sup: int | None = None
+    downvotes_limite_inf: int | None = None
+    downvotes_limite_sup: int | None = None

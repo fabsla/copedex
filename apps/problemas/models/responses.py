@@ -1,9 +1,8 @@
 from pydantic import BaseModel
-from database.schemas.problemas import EventoBase, ProblemaBase, TagBase
+from database.schemas.problemas import EventoBase, ProblemaBase, TagBase, SugestoesBase
 from sqlmodel import Field
 
 from database.schemas.users import UserBase, Pessoa, Role
-from apps.sugestoes.schemas import Sugestoes
 
 class ProblemaSingleResponse(ProblemaBase):
     titulo: str    = Field(default=None, max_length=255, min_length=3)
@@ -30,3 +29,12 @@ class ProblemaFullResponse(ProblemaBase):
     evento: EventoSingleResponse | None
     tags: list[TagSingleResponse] | None
     # sugestoes: list['SugestoesResponse']
+
+class SugestaoSingleResponse(SugestoesBase):
+    problema_id: int
+    autor_id: int
+    upvotes_count: int
+    downvotes_count: int
+
+class SugestaoFullResponse(SugestaoSingleResponse):
+    problema: list[ProblemaSingleResponse]

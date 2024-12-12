@@ -11,9 +11,9 @@ from sqlmodel import select, col
 from apps.problemas.dependencies import ProblemaDep, EventoDep, TagDep
 
 # Schemas
-from database.schemas.problemas import Problema, Problema_Tag, Evento, Tag
+from database.schemas.problemas import Problema, Problema_Tag, Evento, Tag, Sugestao, Sugestao_User, Status_Sugestao
 from database.schemas.users import User
-from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaCreate, ProblemaRead, ProblemaUpdate, TagRead
+from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaCreate, ProblemaRead, ProblemaUpdate, TagRead, SugestaoCreate, SugestaoRead
 
 class Problemas:
 
@@ -51,7 +51,7 @@ class Problemas:
         db: DBSessionDep,
     ) -> Problema:
         
-        problema = Problema(**problema)
+        problema = Problema(**problema.model_dump())
 
         if evento is not None:
             evento_results = db.get(Evento, evento.id)
@@ -243,3 +243,102 @@ class Tags:
             raise
 
         return tag_results
+
+class Sugestoes:
+
+    def create(*,
+        sugestao: SugestaoCreate,
+        problema: Problema,
+        db: DBSessionDep,
+    ) -> Sugestao:
+        
+        sugestao = Sugestao(**sugestao.model_dump())
+        sugestao.problema.append(problema)
+
+        try:
+            sugestao_updated = upsert_row(model_instance = sugestao, db = db)
+        except:
+            raise
+
+        return sugestao_updated
+    
+    def get(*,
+        sugestao: SugestaoRead | None = None,
+        skip: int = 0,
+        limit: int = 100,
+        db: DBSessionDep
+    ) -> list[Sugestao]:
+
+        query = select(Sugestao)
+        if sugestao is not None:
+            if sugestao.descricao:
+                query = query.where(
+                    Sugestao.descricao == '%'+sugestao.descricao+'%'
+                )
+            if sugestao.status:
+                query = query.where(
+                    Sugestao.status == sugestao.status.value
+                )
+            if sugestao.upvotes_limite_inf:
+                query = query.where(
+                    Sugestao.upvotes_count() >= sugestao.upvotes_limite_inf
+                )
+            if sugestao.upvotes_limite_sup:
+                query = query.where(
+                    Sugestao.upvotes_count() <= sugestao.upvotes_limite_sup
+                )
+            if sugestao.downvotes_limite_inf:
+                query = query.where(
+                    Sugestao.downvotes_count() >= sugestao.downvotes_limite_inf
+                )
+            if sugestao.downvotes_limite_sup:
+                query = query.where(
+                    Sugestao.downvotes_count() <= sugestao.downvotes_limite_sup
+                )
+
+        query = query.limit(limit).offset(skip)
+
+        try:
+            sugestoes_results = db.exec(query)
+        except:
+            raise
+        
+        return sugestoes_results if sugestoes_results else False
+
+    def votar(*,
+        sugestao: Sugestao,
+        voto: bool,
+        user: User,
+        db: DBSessionDep,
+    ) -> Sugestao:
+            
+        voto_link = Sugestao_User(
+            sugestao = sugestao,
+            user = user,
+            voto = voto
+        )
+
+        try:
+            sugestao_user = upsert_row(model_instance = voto_link, db = db)
+            sugestao.votantes.append(sugestao_user)
+            
+            sugestao_result = upsert_row(model_instance = sugestao, db = db)
+        except:
+            raise
+
+        return sugestao_result
+    
+    def update_status(*,
+        sugestao: Sugestao,
+        status: Status_Sugestao,
+        db = DBSessionDep,
+    ) -> Sugestao:
+        
+        sugestao.status = status.value
+        
+        try:
+            sugestao_result = upsert_row(model_instance = sugestao, db = db)
+        except:
+            raise
+
+        return sugestao_result

@@ -11,7 +11,7 @@ from apps.auth.utils import DBCurrentUserDep
 from apps.problemas.dependencies import ProblemaDep
 
 # Schemas
-from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaCreate, ProblemaUpdate, TagRead, ProblemaListQueryParams
+from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaCreate, ProblemaUpdate, TagRead, ProblemaListQueryParams, SugestaoCreate
 from apps.problemas.models.responses import ProblemaFullResponse
 
 # Utils
@@ -126,3 +126,19 @@ async def atribuir_tags(
         )
     except:
         raise
+
+@problema_router.post("/{id}/sugestoes")
+async def store_sugestao(
+    problema: ProblemaDep,
+    sugestao: SugestaoCreate,
+    db: DBSessionDep
+):
+    sugestao_db = Sugestoes(
+        descricao = sugestao.descricao,
+        problema_id = sugestao.problema_id
+    )
+
+    session.add(sugestao_db)
+    session.commit()
+
+    return { 'success': True }
