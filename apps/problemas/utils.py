@@ -140,7 +140,7 @@ class Problemas:
         return problemas if problemas else False
 
     def update(*,
-        problema: ProblemaDep,
+        problema: Problema,
         problema_update: ProblemaUpdate | None = None,
         evento_update: EventoRead | None = None,
         tags: list[TagRead] | None = None,

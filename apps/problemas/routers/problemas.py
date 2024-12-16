@@ -12,11 +12,11 @@ from apps.problemas.dependencies import ProblemaDep
 
 # Schemas
 from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaCreate, ProblemaUpdate, TagRead, ProblemaListQueryParams, SugestaoCreate
-from apps.problemas.models.responses import ProblemaFullResponse
+from apps.problemas.models.responses import ProblemaFullResponse, SugestaoSingleResponse
 
 # Utils
 from policies.utils import Authorizer, check_permissions
-from apps.problemas.utils import Problemas
+from apps.problemas.utils import Problemas, Sugestoes
 
 problema_router = APIRouter(
     prefix = '/problemas',
@@ -83,8 +83,8 @@ async def update_problemas(*,
     current_user: DBCurrentUserDep,
     db: DBSessionDep,
 ) -> ProblemaFullResponse:
-
-    check_permissions(model = 'problema', user = current_user, problema = problema)
+    
+    check_permissions(model = 'problema', ability = 'update', user = current_user, problema = problema)
     
     problema_updated = Problemas.update(
         problema = problema,
@@ -132,13 +132,15 @@ async def store_sugestao(
     problema: ProblemaDep,
     sugestao: SugestaoCreate,
     db: DBSessionDep
-):
-    sugestao_db = Sugestoes(
-        descricao = sugestao.descricao,
-        problema_id = sugestao.problema_id
-    )
+) -> SugestaoSingleResponse:
+    
+    try:
+        sugestao_result = Sugestoes.create(
+            sugestao = sugestao,
+            problema = problema,
+            db = db
+        )
+    except:
+        raise
 
-    session.add(sugestao_db)
-    session.commit()
-
-    return { 'success': True }
+    return sugestao_result

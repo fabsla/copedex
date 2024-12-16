@@ -3,7 +3,7 @@ from typing import Annotated
 from config import settings
 
 from fastapi import Depends, HTTPException, status
-from database.connection import get_session, DBSessionDep
+from database.connection import DBSessionDep
 
 # JWT utils
 import jwt
