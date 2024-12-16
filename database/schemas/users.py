@@ -2,12 +2,10 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, SQLModel, Relationship
 from enum import Enum
 
-from database.schemas.problemas import Problema_User
-from apps.sugestoes.schemas import Sugestoes_User
+from database.schemas.problemas import Problema_User, Sugestao_User
 
 if TYPE_CHECKING:
-    from database.schemas.problemas import Problema
-    from apps.sugestoes.schemas import Sugestoes
+    from database.schemas.problemas import Problema, Sugestoes
 
 '''
 ''  Pessoa
@@ -17,6 +15,9 @@ class PessoaBase(SQLModel):
     nome: str      = Field(default = None, min_length = 3, max_length = 255)
     
 class Pessoa (PessoaBase, table=True):
+    def __format__():
+        return 'Pessoa'
+
     user_id: int = Field(foreign_key = "user.id")
     user: 'User' = Relationship(back_populates = "pessoa")
 
@@ -40,6 +41,8 @@ class RoleBase(SQLModel):
     display_name: str = Field(default = None, min_length = 3, max_length = 25)
 
 class Role (RoleBase, table=True):
+    def __format__():
+        return 'Papel'
     pass
 
 '''
@@ -48,11 +51,11 @@ class Role (RoleBase, table=True):
 class UserBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
     username: str  = Field(default=None, unique=True, min_length = 3, max_length=255)
-
-class UserCreate(UserBase):
-    password: str = Field(min_length = 3, max_length=255)
     
 class User(UserBase, table=True):
+    def __format__():
+        return 'Usuário'
+    
     password: str = Field(min_length = 3, max_length=255)
     ativo: bool = Field(default = True)
 
@@ -64,7 +67,7 @@ class User(UserBase, table=True):
     problemas: list["Problema"] | None = Relationship(back_populates = "uploaders", link_model = Problema_User)
 
     sugestoes_criadas: list['Sugestoes'] | None = Relationship(back_populates = 'autor')
-    sugestoes_votadas: list['Sugestoes_User'] | None = Relationship(back_populates = 'user')
+    sugestoes_votadas: list['Sugestao_User'] | None = Relationship(back_populates = 'user')
 
     def has_role(self, role: str):
         return self.role.id_name in role.split('|')

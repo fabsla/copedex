@@ -29,7 +29,9 @@ def restore(current_user: User, object_user: User | None = None):
 	return False
 
 def read_any(current_user: User | None):
-	return True
+	return False
 
-def read(current_user: User | None, object_user: User | None):
+def read(current_user: User | None, object_user: User | None = None):
+	if object_user is not None:
+		return current_user.id == object_user.id
 	return True

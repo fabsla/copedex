@@ -8,20 +8,19 @@ from fastapi.security import OAuth2PasswordRequestForm
 from database.connection import DBSessionDep
 
 # Dependencies
-from apps.auth.dependencies import oauth2_scheme
 from apps.auth.utils import authenticate_user, get_access_token, DBCurrentUserDep
 
 # Models
-from apps.users.models import Users
+from apps.users.utils import Users
 
 # Schemas
-from database.schemas.auth import Token, TokenData
-from database.schemas.users import Pessoa, Role, RoleBase, User, UserBase, UserCreate
+from database.schemas.auth import Token
+from database.schemas.users import UserBase
 
 from apps.auth.schemas import PasswordForm
 
 # Utils
-from policies.utils import Authorizer, inspect_permission
+from apps.auth.utils import get_password_hash
 
 router = APIRouter(
     prefix = '/auth',
@@ -53,14 +52,15 @@ async def signup(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: DBSessionDep
 ) -> UserBase:
+
     try:
-        user = Users.create(username = form_data.username, password = form_data.password, db = db)
-    except HTTPException:
+        user = Users.create_user(user_data = form_data, db = db)
+    except:
         raise
 
     return user
 
-@router.post('/update_password')
+@router.post('/update-password')
 async def update_password(
     form_data: PasswordForm,
     current_user: DBCurrentUserDep,
@@ -81,7 +81,7 @@ async def update_password(
 
     try:
         user = Users.update_password(
-            user_id = current_user.id,
+            user = current_user,
             password = form_data.new_password.get_secret_value(),
             db = db
         )

@@ -4,18 +4,24 @@ from fastapi import Depends
 from sqlmodel import create_engine, SQLModel, Session
 from config import settings
 
-dbconnector = settings.database.CONNECTOR
-dbhost = settings.database.HOST
-dbport = settings.database.PORT
-dbname = settings.database.DB_NAME
-dbuser = settings.database.DB_USER
-dbpassword = settings.database.DB_PASSWORD
+db_connector = settings.database.CONNECTOR
+db_host = settings.database.HOST
+db_port = settings.database.PORT
+db_name = settings.database.DB_NAME
+db_user = settings.database.DB_USER
+db_password = settings.database.DB_PASSWORD
 
-dbfullhost = str(dbhost) + ":" + str(dbport) + '/' + str(dbname)
+db_fullhost = str(db_host) + ":" + str(db_port) + '/' + str(db_name)
 
-url = str(dbconnector) + "://" + str(dbuser) + ":" + str(dbpassword) + "@" + str(dbfullhost)
+if db_user != '':
+    db_fullhost = '@' + db_fullhost
+
+    if db_password != '':
+        db_password = ':' + str(db_password)
+
+full_url = str(db_connector) + "://" + str(db_user) + str(db_password)  + str(db_fullhost)
     
-engine = create_engine(url, echo=settings.DEBUG)
+engine = create_engine(full_url, echo=settings.DEBUG)
 
 def init_db():
     SQLModel.metadata.create_all(engine)
