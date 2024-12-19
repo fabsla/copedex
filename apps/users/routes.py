@@ -128,7 +128,7 @@ Problemas de autor
 @router.get("/{id}/problemas")
 async def index_problemas_autor(
     user: UserDep,
-    session: DBSessionDep
+    db: DBSessionDep
 ) -> list[ProblemaFullResponse]:  
     
     problemas = user.problemas
