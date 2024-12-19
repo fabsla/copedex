@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class ProblemaCreate(BaseModel):
     titulo: str    = Field(default=None, max_length=255, min_length=3)
-    enunciado: str = Field(max_length=255, min_length=3)
+    enunciado: str = Field(min_length=0)
     categoria: str = Field(max_length=255, min_length=3)
     autor: str | None             = None
     dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)

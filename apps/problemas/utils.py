@@ -67,6 +67,8 @@ class Problemas:
             if tag_results is not None:
                 problema.tags = [tag for tag in tag_results]
 
+        # vincular uploader ao problema
+        
         try:
             problema_updated = upsert_row(model_instance = problema, db = db)
         except:
