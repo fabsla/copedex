@@ -10,7 +10,7 @@ class Status_Sugestao(str, Enum):
     cancelada = 'cancelada' # cancelada por autor da sugestao
 
     # acoes por proprietario do problema
-    rejeitada = 'rejeitada'
+    rejeitada = 'rejeitada' # numero de votos negativos > positivos
     aceita    = 'aceita'    # aceita mas ainda nao implementada
     aplicada  = 'aplicada'  # aceita e implementada
 
@@ -29,7 +29,7 @@ class TagBase(SQLModel):
     id: int | None = Field(default = None, primary_key = True)
     
 class Tag(TagBase, table=True):
-    nome: str = Field(default = None, max_length = 255, min_length = 3)
+    nome: str = Field(default = None, max_length = 255)
     problemas: list["Problema"] = Relationship(back_populates="tags", link_model=Problema_Tag)
 
 
@@ -37,7 +37,7 @@ class EventoBase(SQLModel):
     id: int | None = Field(default = None, primary_key = True)
 
 class Evento(EventoBase, table=True):
-    titulo: str = Field(default = None, max_length = 255, min_length = 3)
+    titulo: str = Field(default = None, max_length = 255)
     problemas: list["Problema"] = Relationship(back_populates = "evento")
 
 
@@ -50,7 +50,7 @@ class ProblemaBase(SQLModel):
 
 class Problema(ProblemaBase, table=True):
     titulo: str    = Field(default=None, max_length=255, min_length=3)
-    enunciado: str = Field(max_length=255, min_length=3)
+    enunciado: str = Field()
     categoria: str = Field(max_length=255, min_length=3)
 
     uploaders: list['User'] | None = Relationship(back_populates = "problemas", link_model = Problema_User)
@@ -65,7 +65,7 @@ class Problema(ProblemaBase, table=True):
 
 class Sugestao_User(SQLModel, table=True):
     sugestao_id: int | None = Field(default = None, foreign_key = "sugestao.id", primary_key = True)
-    user_id:     int | None = Field(default = None, foreign_key = "user.id",      primary_key = True)
+    user_id:     int | None = Field(default = None, foreign_key = "user.id",     primary_key = True)
     voto: bool
 
     sugestao: "Sugestao" = Relationship(back_populates = "votantes")
