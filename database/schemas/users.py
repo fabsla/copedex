@@ -69,9 +69,6 @@ class User(UserBase, table=True):
     sugestoes_criadas: list['Sugestao'] | None = Relationship(back_populates = 'autor')
     sugestoes_votadas: list['Sugestao_User'] | None = Relationship(back_populates = 'user')
 
-    def has_role(self, role: str):
-        return self.role.id_name in role.split('|')
-
     def has_higher_role(self, role: RoleEnum):
         return self.role.id > role.value
         
