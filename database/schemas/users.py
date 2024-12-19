@@ -5,7 +5,7 @@ from enum import Enum
 from database.schemas.problemas import Problema_User, Sugestao_User
 
 if TYPE_CHECKING:
-    from database.schemas.problemas import Problema, Sugestoes
+    from database.schemas.problemas import Problema, Sugestao
 
 '''
 ''  Pessoa
@@ -66,7 +66,7 @@ class User(UserBase, table=True):
 
     problemas: list["Problema"] | None = Relationship(back_populates = "uploaders", link_model = Problema_User)
 
-    sugestoes_criadas: list['Sugestoes'] | None = Relationship(back_populates = 'autor')
+    sugestoes_criadas: list['Sugestao'] | None = Relationship(back_populates = 'autor')
     sugestoes_votadas: list['Sugestao_User'] | None = Relationship(back_populates = 'user')
 
     def has_role(self, role: str):

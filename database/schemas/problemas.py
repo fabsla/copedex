@@ -24,10 +24,6 @@ class Problema_User(SQLModel, table=True):
     problema_id: int | None = Field(default = None, foreign_key = "problema.id", primary_key= True)
     user_id: int | None     = Field(default = None, foreign_key = "user.id",     primary_key= True)
 
-class Problema_Sugestao(SQLModel, table=True):
-    problema_id: int | None = Field(default = None, foreign_key = 'problema.id',  primary_key = True)
-    sugestao_id: int | None = Field(default = None, foreign_key = 'sugestoes.id', primary_key = True)
-
 
 class TagBase(SQLModel):
     id: int | None = Field(default = None, primary_key = True)
@@ -68,7 +64,7 @@ class Problema(ProblemaBase, table=True):
 
 
 class Sugestao_User(SQLModel, table=True):
-    sugestao_id: int | None = Field(default = None, foreign_key = "sugestoes.id", primary_key = True)
+    sugestao_id: int | None = Field(default = None, foreign_key = "sugestao.id", primary_key = True)
     user_id:     int | None = Field(default = None, foreign_key = "user.id",      primary_key = True)
     voto: bool
 
