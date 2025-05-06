@@ -48,10 +48,10 @@ async def list_problemas(*,
 
 
 @problema_router.post("/", dependencies=[Depends(Authorizer('problema', 'store'))])
-async def store_problemas(
+async def store_problemas(*,
     problema: ProblemaCreate,
-    evento: EventoRead,
-    tags: TagRead,
+    evento: EventoRead | None = None,
+    tags: TagRead | None = None,
     current_user: DBCurrentUserDep,
     db: DBSessionDep,
 ) -> ProblemaFullResponse:

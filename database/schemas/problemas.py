@@ -43,7 +43,7 @@ class Evento(EventoBase, table=True):
 
 class ProblemaBase(SQLModel):
     id: int | None                = Field(default=None, primary_key=True)
-    autor: str | None             = None
+    autor: str | None             = Field(default=None, min_length=3, max_length=255)
     dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)
     limite_tempo: int | None      = None
     limite_memoria_mb: int | None = None

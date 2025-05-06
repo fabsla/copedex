@@ -48,6 +48,7 @@ class Problemas:
         problema: ProblemaCreate,
         evento: EventoRead | None = None,
         tags: list[TagRead] | None = None,
+        current_user: User,
         db: DBSessionDep,
     ) -> Problema:
         
@@ -56,7 +57,8 @@ class Problemas:
         if evento is not None:
             evento_results = db.get(Evento, evento.id)
             if evento_results is None:
-                evento_results = upsert_row(model = evento, db = db)
+                evento_db = Evento(**evento.model_dump())
+                evento_results = upsert_row(model_instance = evento_db, db = db)
             
             problema.evento = evento_results
                 
@@ -67,7 +69,7 @@ class Problemas:
             if tag_results is not None:
                 problema.tags = [tag for tag in tag_results]
 
-        # vincular uploader ao problema
+        problema.uploaders.append(current_user)
         
         try:
             problema_updated = upsert_row(model_instance = problema, db = db)

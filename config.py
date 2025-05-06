@@ -6,6 +6,7 @@ import os
 
 dotenv.load_dotenv('./.env')
 allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
+
 class DatabaseSettings(BaseSettings):
     CONNECTOR: str   = os.getenv('DATABASE_CONNECTOR')
     HOST: str        = os.getenv('DATABASE_HOST')
