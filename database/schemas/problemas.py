@@ -83,7 +83,7 @@ class Sugestao(SugestaoBase, table=True):
     autor_id: int = Field(foreign_key = "user.id")
     autor: 'User' = Relationship(back_populates = 'sugestoes_criadas')
 
-    votantes: list['Sugestao_User'] = Relationship(back_populates = 'sugestao')
+    votantes: list['Sugestao_User'] = Relationship(back_populates = 'sugestao', cascade_delete = True)
     
     def upvotes(self):
         return [ votante for votante in self.votantes if votante.voto == True ]
