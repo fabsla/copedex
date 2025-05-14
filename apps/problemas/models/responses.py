@@ -10,7 +10,7 @@ class ProblemaSingleResponse(ProblemaBase):
     categoria: str = Field(max_length=255, min_length=3)
 
 class TagSingleResponse(TagBase):
-    nome: str
+    nome: str | None = None
 
 class TagFullResponse(TagSingleResponse):
     problemas: list[ProblemaSingleResponse]
@@ -22,9 +22,9 @@ class EventoFullResponse(EventoSingleResponse):
     problemas: list[ProblemaSingleResponse]
     
 class ProblemaFullResponse(ProblemaBase):
-    titulo: str    = Field(default=None, max_length=255, min_length=3)
-    enunciado: str = Field(max_length=255, min_length=3)
-    categoria: str = Field(max_length=255, min_length=3)
+    titulo: str    = Field(default=None)
+    enunciado: str = Field()
+    categoria: str = Field()
     uploaders: list[UserBase] | None
     evento: EventoSingleResponse | None
     tags: list[TagSingleResponse] | None

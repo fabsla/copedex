@@ -75,7 +75,7 @@ async def store_eventos(
     return evento_response
 
 
-@evento_router.post("/{id}", dependencies=[Depends(Authorizer('evento', 'update'))])
+@evento_router.patch("/{id}", dependencies=[Depends(Authorizer('evento', 'update'))])
 async def update_eventos(
     evento: EventoDep,
     evento_update: EventoCreate,

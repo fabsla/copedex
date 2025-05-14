@@ -25,6 +25,7 @@ class SugestaoCreate(BaseModel):
 class ProblemaUpdate(SQLModel):
     titulo: str | None            = None
     enunciado: str | None         = None
+    categoria: str | None         = None
     autor: str | None             = None
     dificuldade: str | None       = Field(default=None, max_length=255, min_length=3)
     limite_tempo: int | None      = None
@@ -52,11 +53,11 @@ class SugestaoRead(BaseModel):
     status: Status_Sugestao = Status_Sugestao.ativa
 
 class ListCommonQueryParams(BaseModel):
-    skip: int = 0
-    limit: int = 100
+    skip: int = Field(default= 0)
+    limit: int = Field(default=100)
 
 class TagListQueryParams(ListCommonQueryParams):
-    nome: str | None = None
+    nome: str | None = Field(default=None)
 class EventoListQueryParams(ListCommonQueryParams):
     titulo: str | None = None
 

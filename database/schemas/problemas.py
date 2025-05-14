@@ -50,7 +50,7 @@ class ProblemaBase(SQLModel):
 
 class Problema(ProblemaBase, table=True):
     titulo: str    = Field(default=None, max_length=255, min_length=3)
-    enunciado: str = Field()
+    enunciado: str = Field(min_length=3, max_length=255)
     categoria: str = Field(max_length=255, min_length=3)
 
     uploaders: list['User'] | None = Relationship(back_populates = "problemas", link_model = Problema_User)

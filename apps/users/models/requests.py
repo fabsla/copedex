@@ -1,5 +1,6 @@
 from database.schemas.users import UserBase
 from sqlmodel import Field
+from sqlmodel import Field
 from enum import Enum
 
 class RoleOptions(Enum):

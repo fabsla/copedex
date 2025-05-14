@@ -13,7 +13,7 @@ from apps.problemas.dependencies import ProblemaDep, EventoDep, TagDep
 # Schemas
 from database.schemas.problemas import Problema, Problema_Tag, Evento, Tag, Sugestao, Sugestao_User, Status_Sugestao
 from database.schemas.users import User
-from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaCreate, ProblemaRead, ProblemaUpdate, TagRead, SugestaoCreate, SugestaoRead
+from apps.problemas.models.requests import EventoCreate, EventoRead, ProblemaCreate, ProblemaRead, ProblemaUpdate, TagRead, TagCreate, SugestaoCreate, SugestaoRead
 
 class Problemas:
 
@@ -24,13 +24,18 @@ class Problemas:
     ) -> Tuple[list[Tag], list[TagRead]]:
 
         tags_inseridas = []
-        tags_nao_encontradas = []
+        tags_erros = []
+        tags_atribuidas = [tag.id for tag in problema.tags]
         
         for tag in tags:
+            if tag.id in tags_atribuidas:
+                tags_erros.append({"Tag": tag, "Erro": "Já atribuída"})
+                continue
+
             tag_lookup = db.get(Tag, tag.id)
 
-            if tag is None:
-                tags_nao_encontradas.append(tag)
+            if tag_lookup is None:
+                tags_erros.append({"Tag": tag, "Erro": "Não encontrada"})
                 continue
 
             problema.tags.append(tag_lookup)
@@ -41,8 +46,27 @@ class Problemas:
         except:
             raise
 
-        return tags_inseridas, tags_nao_encontradas
+        return tags_inseridas, tags_erros
 
+
+    def desvincular_tags(*,
+        problema: ProblemaDep,
+        tags: list[TagRead] | None = None,
+        db: DBSessionDep
+    ) -> Tuple[list[Tag], list[TagRead]]:
+
+        tags_a_remover = [tag.id for tag in tags]
+        tags_atribuidas = problema.tags.copy()
+
+        for tag in tags_atribuidas:
+            if tag.id in tags_a_remover:
+                problema.tags.remove(tag)
+        
+        try:
+            problema = upsert_row(model_instance = problema, db = db)
+        except:
+            raise
+    
 
     def create(*,
         problema: ProblemaCreate,
@@ -55,19 +79,16 @@ class Problemas:
         problema = Problema(**problema.model_dump())
 
         if evento is not None:
-            evento_results = db.get(Evento, evento.id)
-            if evento_results is None:
-                evento_db = Evento(**evento.model_dump())
-                evento_results = upsert_row(model_instance = evento_db, db = db)
-            
-            problema.evento = evento_results
-                
-
+            evento_db = db.get(Evento, evento.id)
+            if evento is not None:
+                problema.evento = evento_db
+        
         if tags is not None:
-            tag_query = select(Tag).where(Tag.nome.in_([tag.nome for tag in tags]))
-            tag_results = db.exec(tag_query)
-            if tag_results is not None:
-                problema.tags = [tag for tag in tag_results]
+            tags_query = select(Tag).where(Tag.id.in_([tag.id for tag in tags]))
+            tags_found = db.exec(tags_query).all()
+            if tags_found:
+                problema.tags = tags_found
+
 
         problema.uploaders.append(current_user)
         
@@ -90,13 +111,11 @@ class Problemas:
         query = select(Problema)
         if problema is not None:
             if problema.titulo:
-                query = query.where(
-                    Problema.titulo == '%'+problema.titulo+'%'
-                )
+                query = query.where(Problema.titulo.like('%'+problema.titulo+'%'))
+
             if problema.enunciado:
-                query = query.where(
-                    Problema.enunciado == '%'+problema.enunciado+'%'
-                )
+                query = query.where(Problema.enunciado.like('%'+problema.enunciado+'%'))
+
             if problema.limite_tempo_inf:
                 query = query.where(
                     Problema.limite_tempo >= problema.limite_tempo_inf
@@ -150,24 +169,27 @@ class Problemas:
         tags: list[TagRead] | None = None,
         db: DBSessionDep,
     ):
-        # if problema_update is not None:
-        #     if problema_update.titulo:
-        #         problema.titulo = problema_update.titulo
-        #     if problema_update.enunciado:
-        #         problema.enunciado = problema_update.enunciado
-        #     if problema_update.autor:
-        #         problema.autor = problema_update.autor
-        #     if problema_update.dificuldade:
-        #         problema.dificuldade = problema_update.dificuldade
-        #     if problema_update.limite_tempo:
-        #         problema.limite_tempo = problema_update.limite_tempo
-        #     if problema_update.limite_memoria_mb:
-        #         problema.limite_memoria_mb = problema_update.limite_memoria_mb
+        if problema_update is not None:
+            if problema_update.titulo:
+                problema.titulo = problema_update.titulo
 
-        for attr in dir(problema):
-            if not attr.startswith('_') and not callable(getattr(problema, attr)) and getattr(problema_update, attr) is not None:
-                if getattr(problema, attr) != getattr(problema_update, attr):
-                    setattr(problema, attr, getattr(problema_update, attr))
+            if problema_update.enunciado:
+                problema.enunciado = problema_update.enunciado
+
+            if problema_update.autor:
+                problema.autor = problema_update.autor
+
+            if problema_update.dificuldade:
+                problema.dificuldade = problema_update.dificuldade
+            
+            if problema_update.categoria:
+                problema.categoria = problema_update.categoria
+
+            if problema_update.limite_tempo:
+                problema.limite_tempo = problema_update.limite_tempo
+            
+            if problema_update.limite_memoria_mb:
+                problema.limite_memoria_mb = problema_update.limite_memoria_mb
 
         if evento_update is not None:
             evento = db.get(Evento, evento_update.id)
@@ -175,10 +197,10 @@ class Problemas:
                 problema.evento = evento
         
         if tags is not None:
-            tags_query = select(Tag).where(tag.id == Tag.id for tag in tags)
-            tags = db.exec(tags_query).all()
-            if evento is not None:
-                problema.tags = tags
+            tags_query = select(Tag).where(Tag.id.in_([tag.id for tag in tags]))
+            tags_found = db.exec(tags_query).all()
+            if tags_found:
+                problema.tags = tags_found
         
         try:
             problema_updated = upsert_row(model_instance = problema, db = db)
@@ -186,6 +208,35 @@ class Problemas:
             raise
 
         return problema_updated
+    
+    def vincular_evento(*,
+        problema: ProblemaDep,
+        evento: EventoRead,
+        db: DBSessionDep
+    ) -> Problema:
+        
+        try:
+            evento_db = db.get(Evento, evento.id)
+            if evento_db is not None:
+                problema.evento = evento_db
+        
+            problema = upsert_row(model_instance = problema, db = db)
+            return problema
+        except:
+            raise
+
+
+    def desvincular_evento(*,
+        problema: ProblemaDep,
+        db: DBSessionDep
+    ) -> Problema:
+        
+        try:
+            problema.evento = None
+
+            problema = upsert_row(model_instance = problema, db = db)
+        except:
+            raise
     
 class Eventos:
 
@@ -199,7 +250,7 @@ class Eventos:
         query = select(Evento)
         if evento is not None:
             if evento.titulo:
-                query = query.where(Evento.titulo == evento.titulo)
+                query = query.where(Evento.titulo.like("%"+evento.titulo+"%"))
 
         query = query.limit(limit).offset(skip)
         try:
@@ -213,11 +264,9 @@ class Eventos:
         evento: EventoDep,
         evento_update: EventoCreate | None = None,
         db: DBSessionDep,
-    ):
-        for attr in dir(evento):
-            if not attr.startswith('_') and not callable(getattr(evento, attr)) and getattr(evento_update, attr) is not None:
-                if getattr(evento, attr) != getattr(evento_update, attr):
-                    setattr(evento, attr, getattr(evento_update, attr))
+    ):  
+        if evento.titulo != evento_update.titulo:
+            evento.titulo = evento_update.titulo
         
         try:
             evento_updated = upsert_row(model_instance = evento, db = db)
@@ -237,16 +286,31 @@ class Tags:
         
         query = select(Tag)
         if tag is not None:
-            if tag.nome:
-                query = query.where(Tag.nome == tag.nome)
+            if tag.nome is not None:
+                query = query.where(Tag.nome.like("%"+tag.nome+"%"))
 
         query = query.limit(limit).offset(skip)
         try:
             tag_results = db.exec(query)
+            return tag_results
+        except:
+            raise
+    
+    def update(*,
+        tag: TagDep,
+        tag_update: TagCreate | None = None,
+        db: DBSessionDep,
+    ):  
+        if tag.nome != tag_update.nome:
+            tag.nome = tag_update.nome
+        
+        try:
+            tag_updated = upsert_row(model_instance = tag, db = db)
         except:
             raise
 
-        return tag_results
+        return tag_updated
+
 
 class Sugestoes:
 

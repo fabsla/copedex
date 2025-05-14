@@ -20,6 +20,8 @@ if db_user != '':
         db_password = ':' + str(db_password)
 
 full_url = str(db_connector) + "://" + str(db_user) + str(db_password)  + str(db_fullhost)
+# Documentação de url de conexão do sqlalchemy:
+# https://docs.sqlalchemy.org/en/20/core/engines.html#backend-specific-urls
     
 engine = create_engine(full_url, echo=settings.DEBUG)
 

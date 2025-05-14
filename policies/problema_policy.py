@@ -28,5 +28,5 @@ def delete(current_user: User, problema: Problema | None = None):
 def read_any(current_user: User | None):
 	return True
 
-def read(current_user: User | None, problema: Problema | None):
+def read(current_user: User | None, problema: Problema | None = None):
 	return True

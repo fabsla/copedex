@@ -17,7 +17,7 @@ from apps.users.utils import Users
 # Schemas
 from database.schemas.users import Pessoa, Role, RoleBase, RoleEnum, User, UserBase
 from apps.users.models.requests import UserCreate, RoleOptions
-from apps.users.models.responses import UserRestoreResponse
+from apps.users.models.responses import UserRestoreResponse, UserRead
 from apps.problemas.models.responses import ProblemaFullResponse
 
 # Utils
@@ -61,14 +61,14 @@ async def store_user(
 @router.get("/me")
 async def read_user_me(
     current_user: DBCurrentUserDep,
-) -> UserBase:
+) -> UserRead:
     return current_user
 
 @router.get("/{id}", dependencies=[Depends(Authorizer('user', 'read'))])
 async def read_user(
     user: UserDep,
     current_user: DBCurrentUserDep,
-) -> UserBase:
+) -> UserRead:
     
     check_permissions(model = 'user', ability = 'read', user = current_user, object_user = user)
 
@@ -79,7 +79,7 @@ async def list_users(*,
     skip: int = 0,
     limit: int = 100,
     db: DBSessionDep,
-) -> list[UserBase]:
+) -> list[UserRead]:
 
     return get_index(model = User, skip = skip, limit = limit, db = db)
 

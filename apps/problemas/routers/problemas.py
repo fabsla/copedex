@@ -11,7 +11,7 @@ from apps.auth.utils import DBCurrentUserDep
 from apps.problemas.dependencies import ProblemaDep
 
 # Schemas
-from apps.problemas.models.requests import EventoRead, ProblemaRead, ProblemaCreate, ProblemaUpdate, TagRead, ProblemaListQueryParams, SugestaoCreate
+from apps.problemas.models.requests import EventoBase, EventoRead, ProblemaRead, ProblemaCreate, ProblemaUpdate, TagBase, TagRead, ProblemaListQueryParams, SugestaoCreate
 from apps.problemas.models.responses import ProblemaFullResponse, SugestaoSingleResponse
 
 # Utils
@@ -51,7 +51,7 @@ async def list_problemas(*,
 async def store_problemas(*,
     problema: ProblemaCreate,
     evento: EventoRead | None = None,
-    tags: TagRead | None = None,
+    tags: list[TagRead] | None = None,
     current_user: DBCurrentUserDep,
     db: DBSessionDep,
 ) -> ProblemaFullResponse:
@@ -112,12 +112,20 @@ async def delete_problemas_autor(
 
     return { 'sucesso': True }
 
-@problema_router.post("/{id}/atribuir_tags")
+@problema_router.post("/{id}/atribuir_tags", dependencies=[Depends(Authorizer('problema', 'update'))])
 async def atribuir_tags(
     problema: ProblemaDep,
-    tags: list[TagRead],
+    tags: list[TagBase],
+    current_user: DBCurrentUserDep,
     db: DBSessionDep
 ):
+    check_permissions(
+        model = 'problema',
+        ability = 'update',
+        user = current_user,
+        problema = problema
+    )
+
     try:
         tags, errors = Problemas.atribuir_tags(
             problema = problema,
@@ -126,6 +134,81 @@ async def atribuir_tags(
         )
     except:
         raise
+
+    return {"Tags atribuídas": tags, "Tags não encontradas": errors}
+
+@problema_router.post("/{id}/desvincular_tags", dependencies=[Depends(Authorizer('problema', 'update'))])
+async def desvincular_tags(
+    problema: ProblemaDep,
+    tags: list[TagBase],
+    current_user: DBCurrentUserDep,
+    db: DBSessionDep
+):
+    check_permissions(
+        model = 'problema',
+        ability = 'update',
+        user = current_user,
+        problema = problema
+    )
+
+    try:
+        Problemas.desvincular_tags(
+            problema = problema,
+            tags = tags,
+            db = db
+        )
+    except:
+        raise
+
+    return { "success": True }
+
+@problema_router.post("/{id}/vincular_evento", dependencies=[Depends(Authorizer('problema', 'update'))])
+async def vincular_evento(
+    problema: ProblemaDep,
+    evento: EventoBase,
+    current_user: DBCurrentUserDep,
+    db: DBSessionDep
+):
+    check_permissions(
+        model = 'problema',
+        ability = 'update',
+        user = current_user,
+        problema = problema
+    )
+
+    try:
+        Problemas.vincular_evento(
+            problema = problema,
+            evento = evento,
+            db = db
+        )
+    except:
+        raise
+
+    return { "success": True }
+
+@problema_router.post("/{id}/desvincular_evento", dependencies=[Depends(Authorizer('problema', 'update'))])
+async def desvincular_evento(
+    problema: ProblemaDep,
+    current_user: DBCurrentUserDep,
+    db: DBSessionDep
+):
+    check_permissions(
+        model = 'problema',
+        ability = 'update',
+        user = current_user,
+        problema = problema
+    )
+
+    try:
+        Problemas.desvincular_evento(
+            problema = problema,
+            db = db
+        )
+    except:
+        raise
+
+    return { "success": True }
 
 @problema_router.post("/{id}/sugestoes")
 async def store_sugestao(

@@ -26,11 +26,11 @@ tag_router = APIRouter(
     responses = { 404: {'description': 'Tag não encontrada'}},
 )
 
-@tag_router.get("/")
+@tag_router.get("/", dependencies=[Depends(Authorizer('tag', 'read_any'))])
 async def list_tags(*,
     params: Annotated[TagListQueryParams, Query()],
-    db: DBSessionDep
-) -> TagSingleResponse:
+    db: DBSessionDep,
+) -> list[TagSingleResponse]:
     
     tag = TagRead(**params.model_dump())
 
@@ -43,7 +43,7 @@ async def list_tags(*,
 
     return tag_results
 
-@tag_router.get('/{id}/problemas')
+@tag_router.get('/{id}/problemas', dependencies=[Depends(Authorizer('tag', 'read')), Depends(Authorizer('problema', 'read_any'))])
 async def read_tag_problemas(
     tag: TagDep,
 ) -> list[ProblemaSingleResponse]:
@@ -66,7 +66,7 @@ async def store_tags(*,
     return tag_result
 
 
-@tag_router.post("/{id}")
+@tag_router.patch("/{id}")
 async def update_tags(
     tag: TagDep,
     tag_update: TagCreate,
@@ -75,7 +75,7 @@ async def update_tags(
 
     try:
         tag_updated = Tags.update(
-            evento = tag,
+            tag = tag,
             tag_update = tag_update,
             db = db
         )

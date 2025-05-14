@@ -20,7 +20,7 @@ def upsert_row(
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail = "Nome de usuário em uso",
+            detail = "Registro em uso",
         )
     except:
         raise
@@ -60,7 +60,7 @@ def get_by_id(*,
     if model_instance is None:
         raise HTTPException(
                 status_code = status.HTTP_404_NOT_FOUND,
-                detail = f"{model.__format__()} não encontrado!"
+                detail = f"Registro não encontrado!"
             )
         
     return model_instance
