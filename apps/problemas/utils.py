@@ -9,6 +9,7 @@ from sqlmodel import select, col
 
 # Dependencies
 from apps.problemas.dependencies import ProblemaDep, EventoDep, TagDep
+from apps.auth.utils import DBCurrentUserDep
 
 # Schemas
 from database.schemas.problemas import Problema, Problema_Tag, Evento, Tag, Sugestao, Sugestao_User, Status_Sugestao
@@ -317,11 +318,15 @@ class Sugestoes:
     def create(*,
         sugestao: SugestaoCreate,
         problema: Problema,
+        current_user: DBCurrentUserDep,
         db: DBSessionDep,
     ) -> Sugestao:
         
         sugestao = Sugestao(**sugestao.model_dump())
-        sugestao.problema.append(problema)
+        sugestao.problema = problema
+        sugestao.autor = current_user
+        sugestao.autor_id = current_user.id
+        sugestao.ativa = True
 
         try:
             sugestao_updated = upsert_row(model_instance = sugestao, db = db)
@@ -339,9 +344,17 @@ class Sugestoes:
 
         query = select(Sugestao)
         if sugestao is not None:
+            if sugestao.problema_id:
+                query = query.where(
+                    Sugestao.problema_id == sugestao.problema_id
+                )
+            if sugestao.autor_id:
+                query = query.where(
+                    Sugestao.autor_id == sugestao.autor_id
+                )
             if sugestao.descricao:
                 query = query.where(
-                    Sugestao.descricao == '%'+sugestao.descricao+'%'
+                    Sugestao.descricao.like('%'+sugestao.descricao+'%')
                 )
             if sugestao.status:
                 query = query.where(
@@ -380,21 +393,41 @@ class Sugestoes:
         db: DBSessionDep,
     ) -> Sugestao:
             
-        voto_link = Sugestao_User(
-            sugestao = sugestao,
-            user = user,
-            voto = voto
-        )
+        voto_link = Sugestoes.get_voto(sugestao = sugestao, user = user, db = db).one()
+        if voto_link is None:
+            voto_link = Sugestao_User(
+                sugestao = sugestao,
+                user = user,
+            )
+
+        voto_link.voto = voto
 
         try:
             sugestao_user = upsert_row(model_instance = voto_link, db = db)
-            sugestao.votantes.append(sugestao_user)
             
-            sugestao_result = upsert_row(model_instance = sugestao, db = db)
+            if sugestao_user not in sugestao.votantes:
+                sugestao.votantes.append(sugestao_user)
+                sugestao = upsert_row(model_instance = sugestao, db = db)
+
+            return sugestao
+            
         except:
             raise
 
-        return sugestao_result
+    
+    def get_voto(*,
+        sugestao: Sugestao,
+        user: User,
+        db: DBSessionDep
+    ) -> Sugestao_User:
+
+        query = select(Sugestao_User).where(Sugestao_User.user_id == user.id).where(Sugestao_User.sugestao_id == sugestao.id)
+
+        try:
+            sugestao_user = db.exec(query)
+            return sugestao_user
+        except:
+            raise
     
     def update_status(*,
         sugestao: Sugestao,

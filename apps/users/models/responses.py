@@ -9,14 +9,12 @@ class UserRestoreResponse(BaseModel):
     user: UserBase
 
 class UserRead(UserBase):
-    ativo: bool = Field(default = True)
+    ativo: bool
 
-    pessoa: Pessoa | None = Relationship(back_populates = "user")
+    pessoa: Pessoa | None
+    role: Role | None
 
-    role_id: int | None = Field(foreign_key = "role.id", default = 1)
-    role: Role | None   = Relationship()
+    problemas: list["Problema"] | None
 
-    problemas: list["Problema"] | None = Relationship(back_populates = "uploaders", link_model = Problema_User)
-
-    sugestoes_criadas: list['Sugestao'] | None = Relationship(back_populates = 'autor')
-    sugestoes_votadas: list['Sugestao_User'] | None = Relationship(back_populates = 'user')
+    sugestoes_criadas: list['Sugestao'] | None
+    sugestoes_votadas: list['Sugestao_User'] | None

@@ -26,9 +26,9 @@ sugestao_router = APIRouter(
     responses = { 404: {'description': 'Sugestão não encontrada'}},
 )
 
-@sugestao_router.get("/", dependencies=[Depends(Authorizer('sugestao', 'index'))])
+@sugestao_router.get("/", dependencies=[Depends(Authorizer('sugestao', 'read_any'))])
 async def list_sugestoes(*,
-    params: SugestaoListQueryParams,
+    params: Annotated[SugestaoListQueryParams, Query()],
     db: DBSessionDep
 ) -> list[SugestaoSingleResponse]:
     
@@ -47,13 +47,16 @@ async def list_sugestoes(*,
     return sugestoes_results
 
 
-@sugestao_router.get("/{id}/votos", dependencies=[Depends(Authorizer('sugestao', 'view'))])
+@sugestao_router.get("/{id}/votos", dependencies=[Depends(Authorizer('sugestao', 'read'))])
 async def read_votos_sugestao(
     sugestao: SugestaoDep,
     db: DBSessionDep,
-) -> SugestaoSingleResponse:
+):
     
-    return sugestao
+    return {
+        'upvotes': sugestao.upvotes_count,
+        'downvotes': sugestao.downvotes_count
+    }
 
 
 @sugestao_router.post("/{id}/votar", dependencies=[Depends(Authorizer('sugestao', 'votar'))])
@@ -63,6 +66,12 @@ async def votar_sugestao(
     current_user: DBCurrentUserDep,
     db: DBSessionDep
 ) -> SugestaoSingleResponse:
+    
+    if sugestao.status != Status_Sugestao.ativa:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail = "Sugestão não está mais recebendo votos!"
+        )
     
     try:
         sugestao_result = Sugestoes.votar(

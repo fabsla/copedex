@@ -18,9 +18,7 @@ class TagCreate(TagBase):
     nome: str = Field(default = None, max_length = 255, min_length = 3)
 
 class SugestaoCreate(BaseModel):
-    id: int | None = Field(default = None, primary_key = True)
     descricao: str = Field(min_length = 3, max_length = 255)
-    status: Status_Sugestao = Status_Sugestao.ativa
 
 class ProblemaUpdate(SQLModel):
     titulo: str | None            = None
@@ -49,8 +47,14 @@ class TagRead(TagBase):
 
 class SugestaoRead(BaseModel):
     id: int | None = None
+    problema_id: int | None = None
+    autor_id: int | None = None
     descricao: str | None = None
-    status: Status_Sugestao = Status_Sugestao.ativa
+    status: Status_Sugestao | None = Status_Sugestao.ativa
+    upvotes_limite_inf: int | None = None
+    upvotes_limite_sup: int | None = None
+    downvotes_limite_inf: int | None = None
+    downvotes_limite_sup: int | None = None
 
 class ListCommonQueryParams(BaseModel):
     skip: int = Field(default= 0)
@@ -77,7 +81,9 @@ class ProblemaListQueryParams(ListCommonQueryParams):
     tags: list[str] = None
 
 class SugestaoListQueryParams(ListCommonQueryParams):
-    descricao: str | None = Field(min_length = 3, max_length = 255)
+    problema_id: int | None = Field(default = None, gt = 0)
+    autor_id: int | None = Field(default = None, gt = 0)
+    descricao: str | None = Field(default = None, min_length = 3, max_length = 255)
     status: Status_Sugestao | None = None
 
     upvotes_limite_inf: int | None = None

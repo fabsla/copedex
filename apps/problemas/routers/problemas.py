@@ -210,10 +210,11 @@ async def desvincular_evento(
 
     return { "success": True }
 
-@problema_router.post("/{id}/sugestoes")
+@problema_router.post("/{id}/sugestoes", dependencies=[Depends(Authorizer('sugestao', 'store'))])
 async def store_sugestao(
     problema: ProblemaDep,
     sugestao: SugestaoCreate,
+    current_user: DBCurrentUserDep,
     db: DBSessionDep
 ) -> SugestaoSingleResponse:
     
@@ -221,6 +222,7 @@ async def store_sugestao(
         sugestao_result = Sugestoes.create(
             sugestao = sugestao,
             problema = problema,
+            current_user = current_user,
             db = db
         )
     except:

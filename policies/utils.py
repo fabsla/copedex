@@ -6,7 +6,7 @@ from fastapi import Depends, status, HTTPException
 from apps.auth.utils import get_current_active_user
 from database.schemas.users import User
 
-from policies import user_policy, role_policy, problema_policy, evento_policy, tag_policy
+from policies import user_policy, role_policy, problema_policy, evento_policy, tag_policy, sugestao_policy
     
 def _inspect_permission(
     model: str,
