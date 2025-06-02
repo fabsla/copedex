@@ -1,0 +1,21 @@
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: teste
+      MARIADB_DATABASE: omp_teste
+      MARIADB_PASSWORD: teste
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  fastapi:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb_data:
