@@ -9,13 +9,21 @@ services:
       - mariadb_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 
   fastapi:
     build: .
     ports:
       - "8000:8000"
     depends_on:
-      - mariadb
+      - mariadb:
+        - condition: service_healthy
+
 
 volumes:
   mariadb_data:
