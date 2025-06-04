@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # DB
-from database.connection import init_db
+from database.connection import init_db, connect_db
 from database.seeders.roles import RoleSeeder
 
 # App
@@ -30,6 +30,7 @@ from apps.problemas.routes import router as problemas_router
 # Lifespan: linhas antes do 'yield' serão executadas on startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await connect_db()
     init_db()
     RoleSeeder.seed_db()
     yield
