@@ -21,8 +21,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - mariadb:
-        - condition: service_healthy
+      mariadb:
+        condition: service_healthy
 
 
 volumes:
