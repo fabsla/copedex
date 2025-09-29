@@ -14,7 +14,7 @@ class UserRead(UserBase):
     pessoa: Pessoa | None
     role: Role | None
 
-    problemas: list["Problema"] | None
+    # problemas: list["Problema"] | None
 
     sugestoes_criadas: list['Sugestao'] | None
     sugestoes_votadas: list['Sugestao_User'] | None

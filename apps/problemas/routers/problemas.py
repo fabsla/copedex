@@ -135,7 +135,7 @@ async def atribuir_tags(
     except:
         raise
 
-    return {"Tags atribuídas": tags, "Tags não encontradas": errors}
+    return {"tags_atribuídas": tags, "tags_nao_encontradas": errors}
 
 @problema_router.post("/{id}/desvincular_tags", dependencies=[Depends(Authorizer('problema', 'update'))])
 async def desvincular_tags(
